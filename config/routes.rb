@@ -1,4 +1,8 @@
 Nmdb3Api3::Application.routes.draw do
+  resources :keywords
+
+  resources :genres
+
   resources :people
 
   resources :movies
