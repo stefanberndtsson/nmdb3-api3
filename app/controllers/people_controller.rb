@@ -4,6 +4,8 @@ class PeopleController < ApplicationController
 
   def show
     @person = Person.find(params[:id])
-    render json: @person
+    render json: {
+      person: @person
+    }.merge(@person.cast_hashes)
   end
 end

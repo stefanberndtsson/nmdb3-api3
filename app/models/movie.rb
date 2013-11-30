@@ -16,6 +16,15 @@ class Movie < ActiveRecord::Base
   has_many :genres, :through => :movie_genres
   has_many :movie_keywords
   has_many :keywords, :through => :movie_keywords
+  has_many :movie_years
+
+  def display
+    full_title
+  end
+
+  def can_have_episodes?
+    title_category == "TVS" && !is_episode
+  end
 
   def cast_members
     occupations.where(role_id: Role.cast_roles).includes(:person).order("sort_value::int").map do |cast_member|
