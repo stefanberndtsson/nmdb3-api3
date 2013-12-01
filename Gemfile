@@ -43,3 +43,7 @@ end
 
 # Use debugger
 # gem 'debugger', group: [:development, :test]
+
+gem "riddle"
+gem "unicode"
+gem "rack-cors"

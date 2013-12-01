@@ -1,6 +1,7 @@
 class Person < ActiveRecord::Base
   has_many :occupations
   has_many :movies, :through => :occupations
+  attr_accessor :score
 
   def display
     [first_name, last_name].join(" ")
@@ -41,6 +42,17 @@ class Person < ActiveRecord::Base
     cast_order(as_self_base)
   end
 
+  def as_role(role)
+    case role
+    when "acting"
+      return as_acting
+    when "self"
+      return as_self
+    when "archive"
+      return as_archive
+    end
+  end
+
   def cast_hashes
     {
       as_acting: as_hash(as_acting),
@@ -59,5 +71,12 @@ class Person < ActiveRecord::Base
         episode_count: cast.movie.can_have_episodes? ? cast.episode_count : nil
       }.compact
     end
+  end
+
+  def as_json(options)
+    super(options)
+      .merge({
+               score: @score
+             }).compact
   end
 end

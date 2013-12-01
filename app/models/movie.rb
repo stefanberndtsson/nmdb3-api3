@@ -17,6 +17,7 @@ class Movie < ActiveRecord::Base
   has_many :movie_keywords
   has_many :keywords, :through => :movie_keywords
   has_many :movie_years
+  attr_accessor :score
 
   def display
     full_title
@@ -34,7 +35,7 @@ class Movie < ActiveRecord::Base
         character: cast_member.character,
         extras: cast_member.extras,
         sort_value: cast_member.sort_value,
-        episode_count: is_episode ? cast_member.episode_count : nil
+        episode_count: can_have_episodes? ? cast_member.episode_count : nil
       }.compact
     end
   end
@@ -43,7 +44,8 @@ class Movie < ActiveRecord::Base
     json_hash = super(options)
       .merge({
                category_code: category_code,
-               category: category
+               category: category,
+               score: @score
              })
     json_hash.delete("title_category")
     json_hash.compact
