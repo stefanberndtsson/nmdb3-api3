@@ -1,13 +1,28 @@
 Nmdb3Api3::Application.routes.draw do
-  resources :searches
+  resources :searches do
+    collection do
+      get 'movies'
+      get 'people'
+    end
+  end
 
   resources :keywords
 
   resources :genres
 
-  resources :people
+  resources :people do
+    member do
+      get 'as_role'
+    end
+  end
 
-  resources :movies
+  resources :movies do
+    member do
+      get 'genres'
+      get 'keywords'
+      get 'cast_members'
+    end
+  end
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".

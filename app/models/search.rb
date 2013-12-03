@@ -13,6 +13,18 @@ class Search < ActiveRecord::Base
     [movies.query(query, max_results), people.query(query, max_results)]
   end
 
+  def self.query_movies(query, max_results = 20, return_raw = false)
+    query = query.norm
+    movies = Sphinx.new("movies", return_raw)
+    movies.query(query, max_results)
+  end
+
+  def self.query_people(query, max_results = 20, return_raw = false)
+    query = query.norm
+    people = Sphinx.new("biography", return_raw)
+    people.query(query, max_results)
+  end
+
   # Test for Solr
   def self.test(movie_id = 61184)
     query = %Q`
