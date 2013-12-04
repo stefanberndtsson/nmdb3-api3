@@ -96,7 +96,7 @@ class Person < ActiveRecord::Base
     query.map do |cast|
       {
         id: cast.movie.id,
-        movie: cast.movie.display,
+        movie: cast.movie,
         character: cast.character,
         extras: cast.extras,
         episode_count: cast.movie.can_have_episodes? ? cast.episode_count : nil
