@@ -107,8 +107,6 @@ class Person < ActiveRecord::Base
   def as_json(options)
     super(options)
       .merge({
-               all_roles: all_roles,
-               active_roles: active_roles,
                score: @score
              }).compact
   end

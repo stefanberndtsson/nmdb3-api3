@@ -13,7 +13,7 @@ class PeopleController < ApplicationController
       }.merge(@role_data)
     else
       @person = Person.find(params[:id])
-      render json: @person
+      render json: @person.to_json(:methods => [:active_roles, :all_roles])
     end
   end
 
