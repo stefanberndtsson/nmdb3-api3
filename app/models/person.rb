@@ -8,7 +8,7 @@ class Person < ActiveRecord::Base
   end
 
   def as_cast
-    occupations.where(role_id: Role.cast_roles).includes(:movie).joins(movie: :movie_years)
+    occupations.where(role_id: Role.cast_roles).includes(:movie).joins(movie: :movie_years).includes(movie: :main)
       .references(movie: :movie_years)
   end
 
@@ -31,7 +31,7 @@ class Person < ActiveRecord::Base
   end
 
   def cast_order(query)
-    query.order("MIN(COALESCE(NULLIF(movie_years.year,'Unknown'),'0000')) DESC").group("occupations.id,movies.id,movie_years.id")
+    query.order("MIN(COALESCE(NULLIF(movie_years.year,'Unknown'),'0000')) DESC").group("mains_movies.id,occupations.id,movies.id,movie_years.id")
   end
 
   def as_acting
@@ -92,16 +92,63 @@ class Person < ActiveRecord::Base
     roles + active_role_names
   end
 
-  def as_hash(query)
-    query.map do |cast|
-      {
-        id: cast.movie.id,
-        movie: cast.movie,
-        character: cast.character,
-        extras: cast.extras,
-        episode_count: cast.movie.can_have_episodes? ? cast.episode_count : nil
-      }.compact
+  def array_as_hash(query)
+    query.map { |cast| as_hash(cast) }
+  end
+
+  def as_hash(entry)
+    {
+      id: entry.movie.id,
+      movie: entry.movie,
+      character: entry.character,
+      extras: entry.extras,
+      episode_count: entry.movie.can_have_episodes? ? entry.episode_count : nil
+    }.compact
+  end
+
+  def as_episode_hash(hashed_entry)
+    sort_value = hashed_entry[:movie].movie_sort_value
+    {
+      id: hashed_entry[:id],
+      episode_name: hashed_entry[:movie].episode_name,
+      episode_season: hashed_entry[:movie].episode_season,
+      episode_episode: hashed_entry[:movie].episode_episode,
+      episode_sort_value: sort_value,
+      character: hashed_entry[:character],
+      extras: hashed_entry[:extras]
+    }.compact
+  end
+
+  def compress_episodes(query)
+    movie_keys = query.group_by { |x| x.movie_id }.keys
+    entries = array_as_hash(query)
+    entry_index = {}
+    entries.each_with_index do |entry,i|
+      entry_index[entry[:id]] = i
     end
+    remove_index_list = []
+    entries.each_with_index do |cast_entry,i|
+      if cast_entry[:movie].is_episode
+        if movie_keys.include?(cast_entry[:movie].parent_id)
+          e_index = entry_index[cast_entry[:movie].parent_id]
+          entries[e_index][:episodes] ||= []
+          entries[e_index][:episodes] << as_episode_hash(cast_entry)
+          entries[e_index][:episodes] = entries[e_index][:episodes].sort_by { |x| x[:episode_sort_value] }
+          remove_index_list << i
+        else
+          main = cast_entry[:movie].main
+          entries[i][:episodes] = [as_episode_hash(cast_entry.dup)]
+          entries[i][:id] = main.id
+          entries[i][:movie] = main
+          movie_keys << entries[i][:id]
+          entry_index[entries[i][:id]] = i
+        end
+      end
+    end
+    remove_index_list.each do |i|
+      entries[i] = nil
+    end
+    return entries.compact
   end
 
   def as_json(options)

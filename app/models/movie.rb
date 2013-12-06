@@ -17,6 +17,8 @@ class Movie < ActiveRecord::Base
   has_many :movie_keywords
   has_many :keywords, :through => :movie_keywords
   has_many :movie_years
+  has_many :episodes, :foreign_key => :parent_id, :class_name => "Movie"
+  belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
 
   def display

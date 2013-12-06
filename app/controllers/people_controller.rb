@@ -20,7 +20,7 @@ class PeopleController < ApplicationController
   def as_role
     @role = params[:role].blank? ? 'acting' : params[:role]
     @person = Person.find(params[:id])
-    @role_data = @person.as_hash(@person.as_role(@role))
+    @role_data = @person.compress_episodes(@person.as_role(@role))
     render json: @role_data
   end
 end
