@@ -20,7 +20,7 @@ class Person < ActiveRecord::Base
   end
 
   def as_self_base
-    as_cast.where("character_norm ~ E'(himself|herself|themselves)'")
+    as_cast.where("lower(character) ~ E'(himself|herself|themselves)'")
       .where("occupations.id NOT IN (#{as_archive_base.select("occupations.id").to_sql})")
   end
 
@@ -139,7 +139,7 @@ class Person < ActiveRecord::Base
           e_index = entry_index[cast_entry[:movie].parent_id]
           entries[e_index][:episodes] ||= []
           entries[e_index][:episodes] << as_episode_hash(cast_entry)
-          entries[e_index][:episodes] = entries[e_index][:episodes].sort_by { |x| x[:episode_sort_value] }
+          entries[e_index][:episodes] = entries[e_index][:episodes].sort_by { |x| x[:episode_sort_value].to_i }
           remove_index_list << i
         else
           main = cast_entry[:movie].main
