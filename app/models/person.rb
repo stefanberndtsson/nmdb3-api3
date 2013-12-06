@@ -8,7 +8,10 @@ class Person < ActiveRecord::Base
   end
 
   def as_cast
-    occupations.where(role_id: Role.cast_roles).includes(:movie).joins(movie: :movie_years).includes(movie: :main)
+    occupations.where(role_id: Role.cast_roles)
+      .includes(:movie)
+      .joins(movie: :movie_years)
+      .includes(movie: :main)
       .references(movie: :movie_years)
   end
 
@@ -47,7 +50,10 @@ class Person < ActiveRecord::Base
   end
 
   def as_noncast(role_name)
-    occupations.where("role_id IN (#{Role.where(role: role_name).select(:id).to_sql})").includes(:movie).joins(movie: :movie_years)
+    occupations.where("role_id IN (#{Role.where(role: role_name).select(:id).to_sql})")
+      .includes(:movie)
+      .joins(movie: :movie_years)
+      .includes(movie: :main)
       .references(movie: :movie_years)
   end
 
