@@ -120,7 +120,7 @@ class Sphinx
     return 10000*from_exact + value
   end
 
-  def query(query, max_results, filter)
+  def query(query, max_results, filter = [])
     @sph.max_matches = max_results
     @sph.filters = filter
     results = @sph.query(query, @source)[:matches]
