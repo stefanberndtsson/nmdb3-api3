@@ -13,10 +13,10 @@ class Search < ActiveRecord::Base
     [movies.query(query, max_results), people.query(query, max_results)]
   end
 
-  def self.query_movies(query, max_results = 20, return_raw = false)
+  def self.query_movies(query, max_results = 20, filter = [], return_raw = false)
     query = query.norm
     movies = Sphinx.new("movies", return_raw)
-    movies.query(query, max_results)
+    movies.query(query, max_results, filter)
   end
 
   def self.query_people(query, max_results = 20, return_raw = false)
@@ -120,8 +120,9 @@ class Sphinx
     return 10000*from_exact + value
   end
 
-  def query(query, max_results)
+  def query(query, max_results, filter)
     @sph.max_matches = max_results
+    @sph.filters = filter
     results = @sph.query(query, @source)[:matches]
     return results if @return_raw
     doc_ids = results.map { |x| x[:doc] }

@@ -19,6 +19,17 @@ class SearchesController < ApplicationController
   def movies
     query = params[:query]
     max_results = params[:limit].to_i
+    from_year = params[:from_year]
+    to_year = params[:to_year]
+    has_filter = false
+    if from_year || to_year
+      from_year = 0 if !from_year && to_year
+      to_year = 9999 if from_year && !to_year
+      has_filter = true
+    end
+    filter_range = Range.new(from_year.to_i, to_year.to_i)
+    filter = has_filter ? [Riddle::Client::Filter.new("year_attr", filter_range, false)] : []
+
     max_results = 20 unless max_results > 0 && max_results <= 100
     if !query
       render json: {
@@ -26,7 +37,7 @@ class SearchesController < ApplicationController
       }
       return
     end
-    @movies = Search.query_movies(query, max_results)
+    @movies = Search.query_movies(query, max_results, filter)
     render json: @movies
   end
 
