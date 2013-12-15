@@ -1,6 +1,7 @@
 class Person < ActiveRecord::Base
   has_many :occupations
   has_many :movies, :through => :occupations
+  has_many :person_metadata
   attr_accessor :score
 
   def display

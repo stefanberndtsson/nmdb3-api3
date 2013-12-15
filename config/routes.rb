@@ -13,6 +13,11 @@ Nmdb3Api3::Application.routes.draw do
   resources :people do
     member do
       get 'as_role'
+      get 'biography'
+      get 'trivia'
+      get 'quotes'
+      get 'other_works'
+      get 'publicity'
     end
   end
 

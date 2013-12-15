@@ -23,4 +23,32 @@ class PeopleController < ApplicationController
     @role_data = @person.compress_episodes(@person.as_role(@role))
     render json: @role_data
   end
+
+  def biography
+    render json: get_metadata("biography")
+  end
+
+  def trivia
+    render json: get_metadata("trivia")
+  end
+
+  def quotes
+    render json: get_metadata("quotes")
+  end
+
+  def other_works
+    render json: get_metadata("other_works")
+  end
+
+  def publicity
+    render json: get_metadata("publicity")
+  end
+
+  private
+  def get_metadata(key_group)
+    keys = PersonMetadatum.pages[key_group][:keys]
+    @person = Person.find(params[:id])
+    @metadata = @person.person_metadata.find_all_by_key(keys).group_by(&:key)
+    PersonMetadatum.to_hash(@metadata)
+  end
 end
