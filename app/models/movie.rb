@@ -1,14 +1,3 @@
-class Hash
-  def compact(opts={})
-    inject({}) do |new_hash, (k,v)|
-      if !v.nil?
-        new_hash[k] = opts[:recurse] && v.class == Hash ? v.compact(opts) : v
-      end
-      new_hash
-    end
-  end
-end
-
 class Movie < ActiveRecord::Base
   has_many :occupations
   has_many :people, :through => :occupations
@@ -18,6 +7,7 @@ class Movie < ActiveRecord::Base
   has_many :keywords, :through => :movie_keywords
   has_many :movie_years
   has_many :episodes, :foreign_key => :parent_id, :class_name => "Movie"
+  has_many :plots
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
 
@@ -42,7 +32,23 @@ class Movie < ActiveRecord::Base
     end
   end
 
-  def as_json(options)
+  def strong_keywords
+    strong = []
+    plots.each do |plot|
+      next if !plot || !plot.plot_norm
+      tmpplot = plot.plot_norm.downcase.gsub("-", " ").gsub(/[^ a-z0-9]/, "")
+      keywords.each do |keyword|
+        tmpkeyword = keyword.keyword.downcase.gsub("-", " ").gsub(/[^ a-z0-9]/, "").norm
+        if tmpplot.index(tmpkeyword)
+          keyword.strong = true
+          strong << keyword
+        end
+      end
+    end
+    strong.uniq
+  end
+
+  def as_json(options = {})
     json_hash = super(options)
       .merge({
                category_code: category_code,
@@ -70,9 +76,8 @@ class Movie < ActiveRecord::Base
 
   def active_pages
     pages = [:cast]
-    if movie_keywords.count > 0
-      pages << :keywords
-    end
+    pages << :keywords if movie_keywords.count > 0
+    pages << :plots if plots.count > 0
     pages
   end
 end

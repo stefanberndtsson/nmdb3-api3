@@ -97,7 +97,7 @@ class Sphinx
     award_score = "5000*#{awmult}-5000*#{awsmult}"
     adult_score = "50000*#{adultmult}"
 
-    "100000*(1-is_episode)+@weight+(3*link_score)*(occupation_score/30.0)+3*link_score+15*occupation_score-#{award_score}-#{adult_score}+votes/5.0"
+    "100000*(1-is_episode)+@weight+(1*link_score/2.0)*(occupation_score/30.0)+1*link_score+1*occupation_score-#{award_score}-#{adult_score}+votes/5.0"
   end
 
   # This is named as it is to not collide with the keyword 'in' and still work as a method whe

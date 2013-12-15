@@ -163,7 +163,7 @@ class Person < ActiveRecord::Base
     return entries.compact
   end
 
-  def as_json(options)
+  def as_json(options = {})
     super(options)
       .merge({
                score: @score

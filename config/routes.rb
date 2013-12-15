@@ -26,6 +26,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'genres'
       get 'keywords'
       get 'cast_members'
+      get 'plots'
     end
   end
 

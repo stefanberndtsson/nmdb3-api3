@@ -22,12 +22,20 @@ class MoviesController < ApplicationController
   end
 
   def keywords
-    @keywords = Keyword.joins(:movie_keyword).where(movie_keywords: { movie_id: params[:id]})
+    movie = Movie.find(params[:id])
+    keywords = Keyword.joins(:movie_keyword).where(movie_keywords: { movie_id: params[:id]})
+    strong_keywords = movie.strong_keywords
+    @keywords = (strong_keywords + (keywords - strong_keywords)).sort_by { |x| x.display }
     render json: @keywords
   end
 
   def cast_members
     @movie = Movie.find(params[:id])
     render json: @movie.cast_members
+  end
+
+  def plots
+    @plots = Plot.where(movie_id: params[:id])
+    render json: @plots
   end
 end

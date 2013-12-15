@@ -57,7 +57,8 @@ class Keyword < ActiveRecord::Base
   def as_json(options = {})
     super(options)
       .merge({
-               display: display
-             })
+               display: display,
+               strong: strong
+             }).compact
   end
 end
