@@ -28,6 +28,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'keywords'
       get 'cast_members'
       get 'plots'
+      get 'trivia'
     end
   end
 
