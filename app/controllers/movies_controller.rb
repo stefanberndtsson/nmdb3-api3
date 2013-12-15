@@ -12,7 +12,7 @@ class MoviesController < ApplicationController
         cast_members: @movie.cast_members,
       }
     else
-      render json: @movie
+      render json: @movie.to_json(methods: [:active_pages])
     end
   end
 

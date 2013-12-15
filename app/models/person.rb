@@ -99,6 +99,11 @@ class Person < ActiveRecord::Base
     roles + active_role_names
   end
 
+  def active_pages
+    pages = [:as_role]
+    pages += person_metadata.pluck(:key).uniq.map { |x| PersonMetadatum.page_from_key(x) }.uniq
+  end
+
   def array_as_hash(query)
     query.map { |cast| as_hash(cast) }
   end

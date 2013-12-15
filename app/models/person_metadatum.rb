@@ -47,7 +47,6 @@ class PersonMetadatum < ActiveRecord::Base
 
   MDSINGLE=["DB", "DD", "RN", "HT", "AG"]
 
-
   def self.pages
     {
       "biography" => {
@@ -71,6 +70,12 @@ class PersonMetadatum < ActiveRecord::Base
         :display => "Publicity"
       }
     }
+  end
+
+  def self.page_from_key(key)
+    pages.keys.each do |page|
+      return page if pages[page][:keys].include?(key)
+    end
   end
 
   def self.to_hash(page_data)

@@ -67,4 +67,12 @@ class Movie < ActiveRecord::Base
     }
     @@categories[category_code]
   end
+
+  def active_pages
+    pages = [:cast]
+    if movie_keywords.count > 0
+      pages << :keywords
+    end
+    pages
+  end
 end
