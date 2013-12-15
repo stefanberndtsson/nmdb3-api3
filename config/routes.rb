@@ -18,6 +18,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'quotes'
       get 'other_works'
       get 'publicity'
+      get 'info'
     end
   end
 

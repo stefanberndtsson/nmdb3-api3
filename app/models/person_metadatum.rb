@@ -51,6 +51,25 @@ class PersonMetadatum < ActiveRecord::Base
     }
   end
 
+  def self.info_keys
+    ["DB", "DD", "HT", "RN"]
+  end
+
+  def self.age(page_data)
+    age_data = nil
+    if page_data.keys.include?("DB")
+      db_stamp = page_data["DB"].first.value.get_timestamp
+      dd_stamp = Time.now
+      if db_stamp && page_data.keys.include?("DD")
+        dd_stamp = page_data["DD"].first.value.get_timestamp
+      end
+      age = dd_stamp - db_stamp
+      age_display = ApplicationController.helpers.distance_of_time_in_words(age)
+      age_data = OpenStruct.new({ value: age_display, timestamp: age.to_i })
+    end
+    age_data
+  end
+
   def self.page_from_key(key)
     pages.keys.each do |page|
       return page if pages[page][:keys].include?(key)
@@ -66,17 +85,8 @@ class PersonMetadatum < ActiveRecord::Base
     end
     people = Person.where(id: pids).group_by(&:id)
     movies = Movie.where(id: mids).group_by(&:id)
-    age = nil
-    if page_data.keys.include?("DB")
-      db_stamp = page_data["DB"].first.value.get_timestamp
-      dd_stamp = Time.now
-      if db_stamp && page_data.keys.include?("DD")
-        dd_stamp = page_data["DD"].first.value.get_timestamp
-      end
-      age = dd_stamp - db_stamp
-      age_display = ApplicationController.helpers.distance_of_time_in_words(age)
-      page_data["AG"] = [OpenStruct.new({ value: age_display, timestamp: age.to_i })]
-    end
+    age_data = age(page_data)
+    page_data["AG"] = [age_data] if age_data
     page_data.keys.sort_by { |x| MDTYPE.keys.index(x) }.map do |key|
       values = page_data[key].map do |entry|
         tmp = {}

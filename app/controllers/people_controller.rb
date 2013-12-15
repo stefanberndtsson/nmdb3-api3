@@ -17,6 +17,10 @@ class PeopleController < ApplicationController
     end
   end
 
+  def info
+    render json: get_metadata("info", PersonMetadatum.info_keys)
+  end
+
   def as_role
     @role = params[:role].blank? ? 'acting' : params[:role]
     @person = Person.find(params[:id])
@@ -45,8 +49,8 @@ class PeopleController < ApplicationController
   end
 
   private
-  def get_metadata(key_group)
-    keys = PersonMetadatum.pages[key_group][:keys]
+  def get_metadata(key_group, keys = nil)
+    keys = PersonMetadatum.pages[key_group][:keys] if !keys
     @person = Person.find(params[:id])
     @metadata = @person.person_metadata.find_all_by_key(keys).group_by(&:key)
     PersonMetadatum.to_hash(@metadata)
