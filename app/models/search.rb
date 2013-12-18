@@ -33,11 +33,13 @@ ARRAY(SELECT DISTINCT(title_norm) FROM movie_akas WHERE movie_id = #{movie_id}) 
   end
 
   def self.solr_query_movies(query)
+    query = query.norm
     movies = Solr.new("movie")
     movies.query(query)
   end
 
   def self.solr_query_people(query)
+    query = query.norm
     people = Solr.new("person")
     people.query(query)
   end
