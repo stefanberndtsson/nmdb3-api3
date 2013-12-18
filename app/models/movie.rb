@@ -9,6 +9,7 @@ class Movie < ActiveRecord::Base
   has_many :episodes, :foreign_key => :parent_id, :class_name => "Movie"
   has_many :plots
   has_many :trivia
+  has_many :goofs
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
 
@@ -80,6 +81,7 @@ class Movie < ActiveRecord::Base
     pages << :keywords if movie_keywords.count > 0
     pages << :plots if plots.count > 0
     pages << :trivia if trivia.count > 0
+    pages << :goofs if goofs.count > 0
     pages
   end
 end

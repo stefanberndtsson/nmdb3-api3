@@ -43,4 +43,9 @@ class MoviesController < ApplicationController
     @trivia = Trivium.where(movie_id: params[:id])
     render json: @trivia
   end
+
+  def goofs
+    @goofs = Goof.where(movie_id: params[:id])
+    render json: @goofs
+  end
 end
