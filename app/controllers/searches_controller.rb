@@ -54,4 +54,30 @@ class SearchesController < ApplicationController
     @people = Search.query_people(query, max_results)
     render json: @people
   end
+
+  def solr_movies
+    query = params[:query]
+    if !query
+      render json: {
+        error: "No query"
+      }
+      return
+    end
+
+    @movies = Search.solr_query_movies(query)
+    render json: @movies
+  end
+
+  def solr_people
+    query = params[:query]
+    if !query
+      render json: {
+        error: "No query"
+      }
+      return
+    end
+
+    @people = Search.solr_query_people(query)
+    render json: @people
+  end
 end

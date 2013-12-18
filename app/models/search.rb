@@ -38,6 +38,16 @@ ARRAY(SELECT DISTINCT(title_norm) FROM movie_akas WHERE movie_id = #{movie_id}) 
 `
     Movie.find_by_sql(query)
   end
+
+  def self.solr_query_movies(query)
+    movies = Solr.new("movie")
+    movies.query(query)
+  end
+
+  def self.solr_query_people(query)
+    people = Solr.new("person")
+    people.query(query)
+  end
 end
 
 class Sphinx
@@ -144,6 +154,64 @@ class Sphinx
       end
       tmp
     end
+  end
+
+  def doc_objects(doc_ids)
+    Kernel.const_get(@source_class).send(:find, doc_ids)
+  end
+end
+
+class Solr
+  SOURCE_CLASSES={
+    "movie" => "Movie",
+    "person" => "Person"
+  }
+  def initialize(classname, raw_data = false)
+    @classname = classname
+    @source_class = SOURCE_CLASSES[@classname]
+    @raw_data = raw_data
+  end
+
+  def query(query)
+    res = solr.get('select',
+               params: {
+                     q: query,
+                     fq: "class:#{@classname}",
+                     rows: 20,
+                     fl: 'id,nmdb_id,score,class'+(@raw_data ? ",*" : ""),
+                     boost: boost,
+                     defType: 'edismax'
+                   })
+    return res if @raw_data
+    ids = res["response"]["docs"].map { |x| x["nmdb_id"] }
+    movies = doc_objects(ids).group_by(&:id)
+    res["response"]["docs"].map do |doc|
+      tmp = movies[doc["nmdb_id"]].first
+      tmp.score = doc["score"]
+      tmp
+    end
+  end
+
+  def boost
+    @@boost ||= Infix.new(sort_expr).to_postfix.to_solr
+  end
+
+  def sort_expr
+    # div(sub(add(add(product(100000,sub(1,is_episode)),add(div(product(product(3,link_score),occupation_score),30),product(3,div(link_score,add(movie_count,0.001))))),add(product(50,occupation_score),div(votes,5))),product(100000, product(product(category_award_value,1),product(20,award_keyword)))),100)
+    episode = "100000*(1-is_episode)"
+    link_occ = "(3*link_score*occupation_score)/30"
+    link = "3*(link_score/(movie_count+0.001))"
+    occ = "50*occupation_score"
+    scores = "(#{link_occ})+(#{link})+(#{occ})"
+    votes = "votes/5"
+    award = "100000*(category_award_value*20*award_keyword+reduce_genre*2000)"
+
+    "(#{episode})+(#{scores})+(#{votes})-(#{award})/100"
+  end
+
+  def solr
+    config = Rails.configuration.database_configuration[Rails.env]
+    @@rsolr ||= RSolr.connect(url: "http://#{config["host"]}:8080/solr/core0/")
   end
 
   def doc_objects(doc_ids)

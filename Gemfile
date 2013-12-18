@@ -47,3 +47,4 @@ end
 gem "riddle"
 gem "unicode"
 gem "rack-cors"
+gem "rsolr"
