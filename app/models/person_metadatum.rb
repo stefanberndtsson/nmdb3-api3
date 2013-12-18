@@ -63,6 +63,7 @@ class PersonMetadatum < ActiveRecord::Base
       if db_stamp && page_data.keys.include?("DD")
         dd_stamp = page_data["DD"].first.value.get_timestamp
       end
+      return nil if !db_stamp || !dd_stamp
       age = dd_stamp - db_stamp
       age_display = ApplicationController.helpers.distance_of_time_in_words(age)
       age_data = OpenStruct.new({ value: age_display, timestamp: age.to_i })
