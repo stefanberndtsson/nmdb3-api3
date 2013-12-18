@@ -75,17 +75,24 @@ class QuoteDatum < ActiveRecord::Base
     # Still multiple hits or no hits at all...
     # Now look for matching name parts (split on space) where all parts exists within name
     if new_tmp.blank? || new_tmp.size != 1
-      quoter_parts = quoter.split(" ")
+      quoter_parts = quoter.split(" ").reject { |x| x.downcase == "the" }
+
+      exact = []
       new_tmp = character_list.select do |member|
         quoter_parts_count = 0
         quoter_parts.each do |qpart|
           quoter_parts_count += 1 if member[1].character.index(qpart)
+          exact << member if member[1].character.index(qpart) == 0 && member[1].character.size == qpart.size
         end
         quoter_parts_count == quoter_parts.size
       end
     end
     # Skip if we got multiple or none...
-    return nil if new_tmp.blank? || new_tmp.size != 1
+    Rails.logger.debug("New tmp: #{exact.inspect}")
+    if new_tmp.blank? || new_tmp.size != 1
+      return exact.first[1].person if exact.size == 1
+      return nil
+    end
     new_tmp.first[1].person
   end
 end
