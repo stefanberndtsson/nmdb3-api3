@@ -32,6 +32,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'plots'
       get 'trivia'
       get 'goofs'
+      get 'quotes'
     end
   end
 

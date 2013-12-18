@@ -17,6 +17,11 @@ class String
     end
     return timestamp
   end
+
+  def norm
+    decomposed = Unicode.nfkd(self).gsub(/[^\u0000-\u00ff]/, "")
+    Unicode.downcase(decomposed)
+  end
 end
 
 class Hash

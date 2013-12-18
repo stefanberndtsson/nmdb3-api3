@@ -10,6 +10,7 @@ class Movie < ActiveRecord::Base
   has_many :plots
   has_many :trivia
   has_many :goofs
+  has_many :quotes
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
 
@@ -21,8 +22,12 @@ class Movie < ActiveRecord::Base
     title_category == "TVS" && !is_episode
   end
 
+  def cast
+    occupations.where(role_id: Role.cast_roles).includes(:person).order("sort_value::int")
+  end
+
   def cast_members
-    occupations.where(role_id: Role.cast_roles).includes(:person).order("sort_value::int").map do |cast_member|
+    cast.map do |cast_member|
       {
         id: cast_member.person_id,
         name: cast_member.person.display,
@@ -82,6 +87,7 @@ class Movie < ActiveRecord::Base
     pages << :plots if plots.count > 0
     pages << :trivia if trivia.count > 0
     pages << :goofs if goofs.count > 0
+    pages << :quotes if quotes.count > 0
     pages
   end
 end

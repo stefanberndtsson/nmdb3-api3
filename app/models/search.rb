@@ -1,10 +1,3 @@
-class String
-  def norm
-    decomposed = Unicode.nfkd(self).gsub(/[^\u0000-\u00ff]/, "")
-    Unicode.downcase(decomposed)
-  end
-end
-
 class Search < ActiveRecord::Base
   def self.query(query, max_results = 20, return_raw = false)
     query = query.norm

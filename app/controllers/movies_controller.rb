@@ -48,4 +48,9 @@ class MoviesController < ApplicationController
     @goofs = Goof.where(movie_id: params[:id])
     render json: @goofs
   end
+
+  def quotes
+    @quotes = Quote.where(movie_id: params[:id]).order(:sort_order)
+    render json: @quotes
+  end
 end
