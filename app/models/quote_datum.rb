@@ -28,6 +28,7 @@ class QuoteDatum < ActiveRecord::Base
   end
 
   def quoter
+    return nil if value[/^\[/]
     @quoter ||= value.index(':') ? value.gsub(/^([^:]+):.*$/,'\1') : nil
   end
 
@@ -36,7 +37,7 @@ class QuoteDatum < ActiveRecord::Base
     return @@quoter_person_cache[[quote.movie_id, quoter]] if @@quoter_person_cache[[quote.movie_id, quoter]]
     movie = quote.movie
     return nil if quoter.blank?
-    qnorm = quoter.norm
+    qnorm = quoter.norm.split(" ").reject { |x| x == "the" }.join(" ")
     return nil if qnorm.blank?
 
     character_list = movie.cast.map do |member|
@@ -76,23 +77,16 @@ class QuoteDatum < ActiveRecord::Base
     # Now look for matching name parts (split on space) where all parts exists within name
     if new_tmp.blank? || new_tmp.size != 1
       quoter_parts = quoter.split(" ").reject { |x| x.downcase == "the" }
-
-      exact = []
       new_tmp = character_list.select do |member|
         quoter_parts_count = 0
         quoter_parts.each do |qpart|
           quoter_parts_count += 1 if member[1].character.index(qpart)
-          exact << member if member[1].character.index(qpart) == 0 && member[1].character.size == qpart.size
         end
         quoter_parts_count == quoter_parts.size
       end
     end
     # Skip if we got multiple or none...
-    Rails.logger.debug("New tmp: #{exact.inspect}")
-    if new_tmp.blank? || new_tmp.size != 1
-      return exact.first[1].person if exact.size == 1
-      return nil
-    end
+    return nil if new_tmp.blank? || new_tmp.size != 1
     new_tmp.first[1].person
   end
 end
