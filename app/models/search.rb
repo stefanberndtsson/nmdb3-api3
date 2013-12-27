@@ -18,20 +18,6 @@ class Search < ActiveRecord::Base
     people.query(query, max_results)
   end
 
-  # Test for Solr
-  def self.test(movie_id = 61184)
-    query = %Q`
-SELECT id,title,episode_name,
-ARRAY(SELECT genre FROM genres WHERE id IN (SELECT genre_id FROM movie_genres WHERE movie_id = #{movie_id})) AS genre,
-ARRAY(SELECT keyword FROM keywords WHERE id IN (SELECT keyword_id FROM movie_keywords WHERE movie_id = #{movie_id})) AS keyword,
-ARRAY(SELECT language FROM languages WHERE id IN (SELECT language_id FROM movie_languages WHERE movie_id = #{movie_id})) AS language,
-ARRAY(SELECT DISTINCT(title_norm) FROM movie_akas WHERE movie_id = #{movie_id}) AS alternative_title,
-1
- FROM movies WHERE id = #{movie_id}
-`
-    Movie.find_by_sql(query)
-  end
-
   def self.solr_query_movies(query)
     query = query.norm
     movies = Solr.new("movie")
@@ -201,7 +187,7 @@ class Solr
     votes = "votes/5"
     award = "100000*(category_award_value*20*award_keyword+reduce_genre*2000)"
 
-    "(#{episode})+(#{scores})+(#{votes})-(#{award})/100"
+    "((#{episode})+(#{scores})+(#{votes})-(#{award}))/100"
   end
 
   def solr
