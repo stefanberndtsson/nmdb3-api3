@@ -67,4 +67,18 @@ class MoviesController < ApplicationController
       thetvdb_id: @thetvdbid
     }.compact
   end
+
+  def cover
+    @movie = Movie.find(params[:id])
+    size = 640
+    if params[:size]
+      size = params[:size] == "full" ? nil : params[:size].to_i
+    end
+    image_url = @movie.cover_image
+    source = image_url ? "Wikipedia" : nil
+    render json: {
+      image: image_url,
+      source: source
+    }.compact
+  end
 end

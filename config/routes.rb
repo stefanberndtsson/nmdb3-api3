@@ -34,6 +34,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'goofs'
       get 'quotes'
       get 'externals'
+      get 'cover'
     end
   end
 

@@ -60,8 +60,11 @@ class Movie < ActiveRecord::Base
       .merge({
                category_code: category_code,
                category: category,
-               score: @score
+               score: @score,
              })
+    if Rails.rcache.get(cover_image_cache_key)
+      json_hash[:image_url] = cover_image
+    end
     json_hash.delete("title_category")
     json_hash.compact
   end
@@ -97,6 +100,35 @@ class Movie < ActiveRecord::Base
 
   def google
     @google ||= MovieExternal::Google.new(self)
+  end
+
+  def wikipedia(lang = "en")
+    wpages = freebase.wikipedia_pages
+    return nil if !wpages || !wpages[lang]
+    @wikipedia ||= {}
+    @wikipedia[lang] ||= MovieExternal::Wikipedia.new(self, wpages[lang], lang)
+  end
+
+  def cover_image_cache_key(size = 640)
+    "movie:#{self.id}:externals:wikipedia:cover"
+  end
+
+  def cover_image(size = 640)
+    image_url = Rails.rcache.get("movie:#{self.id}:externals:wikipedia:cover")
+    if image_url && image_url != ""
+      return image_url
+    end
+    if !wikipedia
+      Rails.rcache.set("movie:#{self.id}:externals:wikipedia:cover", nil, 1.day)
+      return nil
+    end
+    image_url = wikipedia.image_url(size)
+    if !image_url
+      Rails.rcache.set("movie:#{self.id}:externals:wikipedia:cover", nil, 1.day)
+      return nil
+    end
+    Rails.rcache.set("movie:#{self.id}:externals:wikipedia:cover", image_url, 1.day)
+    image_url
   end
 
   def imdb_search_title

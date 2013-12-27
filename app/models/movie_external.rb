@@ -1,7 +1,12 @@
+module Wikipedia
+  class Page
+    attr_reader :data
+  end
+end
+
 class MovieExternal
   class Freebase
     def initialize(movie)
-      puts "New object..."
       @movie = movie
     end
 
@@ -106,6 +111,105 @@ class MovieExternal
         @movie.update_attribute(:imdb_id, tmp_imdbid)
       end
       tmp_imdbid
+    end
+  end
+
+  class Wikipedia
+    CATEGORIES={
+      "TVS" => :television,
+      "V" => :film,
+      "TV" => :film,
+      "M" => :film,
+      "VG" => :videogame
+    }
+    TYPES={
+      film: {
+        type: "film",
+        title: "name",
+        image: "image"
+      },
+      television: {
+        type: "television",
+        title: "show_name",
+        image: "image"
+      }
+    }
+    def initialize(movie, page_title, lang = "en")
+      @movie = movie
+      @page_title = page_title
+      @lang = lang
+    end
+
+    def client
+      @client ||= ::Wikipedia::Client.new
+    end
+
+    def domain
+      @domain ||= @lang+".wikipedia.org"
+    end
+
+    def page
+      @page ||= client.find(@page_title, domain: domain)
+    end
+
+    def content
+      page.content
+    end
+
+    def infobox
+      @infobox ||= content.scan(/(?=\{\{Infobox((?:[^{}]++|\{\{\g<1>\}\})++)\}\})/).map do |box|
+        box.map do |line|
+          box_type = line.split(/[\n\|]+/).first.trim.downcase
+          values = line.split(/\n+\s*\|\s*/).map do |item|
+            item.scan(/^([^=]+?)\s*=\s*(.*)$/).first
+          end
+          hashed_values = nil
+          if !values.blank? && !values.compact.blank?
+            hashed_values = Hash[values.compact]
+            hashed_values["box_type"] = box_type
+          end
+          hashed_values
+        end.first
+      end
+    end
+
+    def title
+      type = TYPES[CATEGORIES[@movie.category_code]]
+      box = infobox.select { |x| x["box_type"] == type[:type] }.first
+      return nil if !box
+      @title ||= box[type[:title]]
+    end
+
+    def image
+      type = TYPES[CATEGORIES[@movie.category_code]]
+      box = infobox.select { |x| x["box_type"] == type[:type] }.first
+      return nil if !box
+      image = box[type[:image]]
+      if image.match(/^\[\[File:([^\|]+)(|\|.*)\]\]$/)
+        image = $1
+      end
+      @image ||= image
+    end
+
+    def image_url(size = 640)
+      @image_url ||= {}
+      return @image_url[size] if @image_url[size]
+      if !image
+        @image_url[size] = nil
+        return nil
+      end
+
+      options = size ? { iiurlwidth: size } : { }
+      image_pages = client.find_image("File:"+image, options)
+      image_page_ids = image_pages.data["query"]["pages"].keys if image_pages
+      if !image_pages || image_page_ids.size == 0 || (image_page_ids.size == 1&& image_page_ids.first == "-1")
+        @image_url[size] ||= nil
+        return nil
+      end
+      image_page_id = image_pages.data["query"]["pages"].keys.first
+      image_page = image_pages.data["query"]["pages"][image_page_id]["imageinfo"].first
+      image_url = image_page["thumburl"] ? image_page["thumburl"] : image_page["url"]
+      @image_url[size] ||= image_url
     end
   end
 end

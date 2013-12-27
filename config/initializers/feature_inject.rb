@@ -22,6 +22,18 @@ class String
     decomposed = Unicode.nfkd(self).gsub(/[^\u0000-\u00ff]/, "")
     Unicode.downcase(decomposed)
   end
+
+  def ltrim
+    self.gsub(/^\s+/,'')
+  end
+
+  def rtrim
+    self.gsub(/\s+$/,'')
+  end
+
+  def trim
+    self.ltrim.rtrim
+  end
 end
 
 class Hash
