@@ -28,7 +28,6 @@ module PersonExternal
     end
 
     def wikipedia_pages
-      return nil if !topic
       titles = {}
       cached_page_count = Rails.rcache.get("person:#{@person.id}:external:freebase:wikipedia_page_count")
       if cached_page_count
@@ -38,6 +37,7 @@ module PersonExternal
           titles[lang] = title
         end
       else
+        return nil if !topic
         topic.property('/type/object/key')
           .select { |x| x.value[/^\/wikipedia\/([^\/]+)_title\//] }
           .sort_by {|x| x.value}

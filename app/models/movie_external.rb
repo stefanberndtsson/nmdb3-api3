@@ -32,7 +32,6 @@ class MovieExternal
     end
 
     def wikipedia_pages
-      return nil if !topic
       titles = {}
       cached_page_count = Rails.rcache.get("movie:#{@movie.id}:external:freebase:wikipedia_page_count")
       if cached_page_count
@@ -42,6 +41,7 @@ class MovieExternal
           titles[lang] = title
         end
       else
+        return nil if !topic
         topic.property('/type/object/key')
           .select { |x| x.value[/^\/wikipedia\/([^\/]+)_title\//] }
           .sort_by {|x| x.value}
@@ -62,9 +62,9 @@ class MovieExternal
     end
 
     def netflixid
-      return nil if !topic
       cached_id = Rails.rcache.get("movie:#{@movie.id}:external:freebase:netflix:id")
       return (cached_id == "" ? nil : cached_id) if cached_id
+      return nil if !topic
       netflix = topic.property('/type/object/key').select { |x| x.value[/^\/authority\/netflix\/movie\/(.*)$/] }.first
       id = netflix ? netflix.value[/\/authority\/netflix\/movie\/(.*)/,1] : nil
       Rails.rcache.set("movie:#{@movie.id}:external:freebase:netflix:id", id, 1.minute)
@@ -72,9 +72,9 @@ class MovieExternal
     end
 
     def thetvdbid
-      return nil if !topic
       cached_id = Rails.rcache.get("movie:#{@movie.id}:external:freebase:thetvdb:id")
       return (cached_id == "" ? nil : cached_id) if cached_id
+      return nil if !topic
       thetvdb = topic.property('/type/object/key').select { |x| x.value[/^\/authority\/thetvdb\/series\/(.*)$/] }.first
       id = thetvdb ? thetvdb.value[/\/authority\/thetvdb\/series\/(.*)/,1] : nil
       Rails.rcache.set("movie:#{@movie.id}:external:freebase:thetvdb:id", id, 1.minute)
