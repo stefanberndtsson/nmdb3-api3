@@ -224,7 +224,7 @@ class MovieExternal
       @infobox ||= content.scan(/(?=\{\{Infobox((?:[^{}]++|\{\{\g<1>\}\})++)\}\})/).map do |box|
         box.map do |line|
           box_type = line.split(/[\n\|]+/).first.trim.downcase
-          values = line.split(/\n+\s*\|\s*/).map do |item|
+          values = line.split(/\n*\s*\|\s*/).map do |item|
             item.scan(/^([^=]+?)\s*=\s*(.*)$/).first
           end
           hashed_values = nil
