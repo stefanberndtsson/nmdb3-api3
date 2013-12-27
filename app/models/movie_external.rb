@@ -137,9 +137,9 @@ class MovieExternal
           link = item.search("link").text
           title = item.search("title").text
           results["items"] << {
-            "link" => link,
-            "title" => title
-          }
+            "title" => title,
+            "link" => link
+          } if results["items"].size < 5
         end
         return results
       end
