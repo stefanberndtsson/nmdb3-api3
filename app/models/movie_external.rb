@@ -90,7 +90,7 @@ class MovieExternal
     def imdbid
       tmp_imdbid = @movie.imdb_id
       if !tmp_imdbid
-        results = GoogleCustomSearchApi.search(@movie.imdb_search_title)
+        results = GoogleCustomSearchApi.search(@movie.imdb_search_title+" site:www.imdb.com/title")
         found_exact = false
         find_one = results["items"].select do |item|
           tmp = item["link"][/^http:\/\/www.imdb.com\/title\/(tt\d+)\/$/]

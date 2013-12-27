@@ -66,7 +66,7 @@ module PersonExternal
     def imdbid
       tmp_imdbid = Rails.rcache.get("person:#{@person.id}:externals:google:imdbid")
       if !tmp_imdbid || tmp_imdbid.blank?
-        results = GoogleCustomSearchApi.search("\"#{@person.imdb_search_name}\"")
+        results = GoogleCustomSearchApi.search("\"#{@person.imdb_search_name}\" site:www.imdb.com/name")
         found_exact = false
         find_one = results["items"].select do |item|
           tmp = item["link"][/^http:\/\/www.imdb.com\/name\/(nm\d+)\/$/]
