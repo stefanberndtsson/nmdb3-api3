@@ -92,11 +92,11 @@ class Movie < ActiveRecord::Base
   end
 
   def freebase
-    MovieExternal::Freebase.new(self)
+    @freebase ||= MovieExternal::Freebase.new(self)
   end
 
   def google
-    MovieExternal::Google.new(self)
+    @google ||= MovieExternal::Google.new(self)
   end
 
   def imdb_search_title

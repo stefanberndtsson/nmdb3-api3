@@ -1,8 +1,8 @@
 class MovieExternal
   class Freebase
     def initialize(movie)
+      puts "New object..."
       @movie = movie
-      @topic = topic
     end
 
     def search(query)
@@ -11,7 +11,7 @@ class MovieExternal
         type = "/tv/tv_program"
       end
       res = FreebaseAPI::Topic.search(query, filter: "(all type:#{type})")
-      res.first ? res.first.last.id : nil
+      @query ||= res.first ? res.first.last.id : nil
     end
 
     def topic
@@ -19,7 +19,7 @@ class MovieExternal
       return nil if !imdbid
       search_result = search(imdbid)
       return nil if !search_result
-      @topic = FreebaseAPI::Topic.get(search_result)
+      @topic ||= FreebaseAPI::Topic.get(search_result)
     end
 
     def decode_string(str)
@@ -27,26 +27,53 @@ class MovieExternal
     end
 
     def wikipedia_pages
-      return nil if !@topic
+      return nil if !topic
       titles = {}
-      @topic.property('/type/object/key').select { |x| x.value[/^\/wikipedia\/([^\/]+)_title\//] }.sort_by {|x| x.value}.each do |obj|
-        if obj.value[/^\/wikipedia\/([^\/]+)_title\/(.*)/]
-          titles[$1] = decode_string($2)
+      cached_page_count = Rails.rcache.get("movie:#{@movie.id}:external:freebase:wikipedia_page_count")
+      if cached_page_count
+        cached_page_count.to_i.times do |i|
+          lang = Rails.rcache.get("movie:#{@movie.id}:external:freebase:wikipedia_page:#{i}:lang")
+          title = Rails.rcache.get("movie:#{@movie.id}:external:freebase:wikipedia_page:#{i}:title")
+          titles[lang] = title
+        end
+      else
+        topic.property('/type/object/key')
+          .select { |x| x.value[/^\/wikipedia\/([^\/]+)_title\//] }
+          .sort_by {|x| x.value}
+          .each_with_index do |obj,i|
+          if obj.value[/^\/wikipedia\/([^\/]+)_title\/(.*)/]
+            lang = $1
+            title = decode_string($2)
+            titles[lang] = title
+            Rails.rcache.set("movie:#{@movie.id}:external:freebase:wikipedia_page:#{i}:lang", lang, 1.minute)
+            Rails.rcache.set("movie:#{@movie.id}:external:freebase:wikipedia_page:#{i}:title", title, 1.minute)
+            Rails.rcache.set("movie:#{@movie.id}:external:freebase:wikipedia_page_count",
+                         Rails.rcache.get("movie:#{@movie.id}:external:freebase:wikipedia_page_count").to_i+1,
+                         1.minute)
+          end
         end
       end
       titles
     end
 
     def netflixid
-      return nil if !@topic
-      netflix = @topic.property('/type/object/key').select { |x| x.value[/^\/authority\/netflix\/movie\/(.*)$/] }.first
-      netflix ? netflix.value[/\/authority\/netflix\/movie\/(.*)/,1] : nil
+      return nil if !topic
+      cached_id = Rails.rcache.get("movie:#{@movie.id}:external:freebase:netflix:id")
+      return (cached_id == "" ? nil : cached_id) if cached_id
+      netflix = topic.property('/type/object/key').select { |x| x.value[/^\/authority\/netflix\/movie\/(.*)$/] }.first
+      id = netflix ? netflix.value[/\/authority\/netflix\/movie\/(.*)/,1] : nil
+      Rails.rcache.set("movie:#{@movie.id}:external:freebase:netflix:id", id, 1.minute)
+      id
     end
 
     def thetvdbid
-      return nil if !@topic
-      thetvdb = @topic.property('/type/object/key').select { |x| x.value[/^\/authority\/thetvdb\/series\/(.*)$/] }.first
-      thetvdb ? thetvdb.value[/\/authority\/thetvdb\/series\/(.*)/,1] : nil
+      return nil if !topic
+      cached_id = Rails.rcache.get("movie:#{@movie.id}:external:freebase:thetvdb:id")
+      return (cached_id == "" ? nil : cached_id) if cached_id
+      thetvdb = topic.property('/type/object/key').select { |x| x.value[/^\/authority\/thetvdb\/series\/(.*)$/] }.first
+      id = thetvdb ? thetvdb.value[/\/authority\/thetvdb\/series\/(.*)/,1] : nil
+      Rails.rcache.set("movie:#{@movie.id}:external:freebase:thetvdb:id", id, 1.minute)
+      id
     end
   end
 
