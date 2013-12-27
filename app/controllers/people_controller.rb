@@ -48,6 +48,30 @@ class PeopleController < ApplicationController
     render json: get_metadata("publicity")
   end
 
+  def externals
+    @person = Person.find(params[:id])
+    @imdbid = @person.google.imdbid
+    @wikipedia = @person.freebase.wikipedia_pages
+    render json: {
+      imdb_id: @imdbid,
+      wikipedia: @wikipedia.compact,
+    }.compact
+  end
+
+  def cover
+    @person = Person.find(params[:id])
+    size = 640
+    if params[:size]
+      size = params[:size] == "full" ? nil : params[:size].to_i
+    end
+    image_url = @person.cover_image
+    source = image_url ? "Wikipedia" : nil
+    render json: {
+      image: image_url,
+      source: source
+    }.compact
+  end
+
   private
   def get_metadata(key_group, keys = nil)
     keys = PersonMetadatum.pages[key_group][:keys] if !keys

@@ -21,6 +21,8 @@ Nmdb3Api3::Application.routes.draw do
       get 'other_works'
       get 'publicity'
       get 'info'
+      get 'externals'
+      get 'cover'
     end
   end
 
