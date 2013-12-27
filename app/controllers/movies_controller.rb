@@ -53,4 +53,18 @@ class MoviesController < ApplicationController
     @quotes = Quote.where(movie_id: params[:id]).order(:sort_order)
     render json: @quotes
   end
+
+  def externals
+    @movie = Movie.find(params[:id])
+    @imdbid = @movie.google.imdbid
+    @wikipedia = @movie.freebase.wikipedia_pages
+    @netflixid = @movie.freebase.netflixid
+    @thetvdbid = @movie.freebase.thetvdbid
+    render json: {
+      imdb_id: @imdbid,
+      wikipedia: @wikipedia.compact,
+      netflix_id: @netflixid,
+      thetvdb_id: @thetvdbid
+    }.compact
+  end
 end

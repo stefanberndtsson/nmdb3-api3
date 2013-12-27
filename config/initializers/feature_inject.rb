@@ -35,3 +35,8 @@ class Hash
   end
 end
 
+class NilClass
+  def compact(opts={})
+    nil
+  end
+end

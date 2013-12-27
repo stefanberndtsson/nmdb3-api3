@@ -90,4 +90,25 @@ class Movie < ActiveRecord::Base
     pages << :quotes if quotes.count > 0
     pages
   end
+
+  def freebase
+    MovieExternal::Freebase.new(self)
+  end
+
+  def google
+    MovieExternal::Google.new(self)
+  end
+
+  def imdb_search_title
+    if title_category == "TVS"
+      return full_title.gsub(/^"(.*)" \(/, '\1 (')
+    end
+    if title_category
+      cpos = full_title.rindex("(#{title_category})")
+      if cpos
+        return full_title[0..cpos-2]
+      end
+    end
+    return full_title
+  end
 end
