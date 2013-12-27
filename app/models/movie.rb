@@ -94,6 +94,14 @@ class Movie < ActiveRecord::Base
     pages
   end
 
+  def imdb
+    @imdb ||= MovieExternal::IMDb.new(self)
+  end
+
+  def bing
+    @bing ||= MovieExternal::Bing.new(self)
+  end
+
   def freebase
     @freebase ||= MovieExternal::Freebase.new(self)
   end

@@ -174,6 +174,14 @@ class Person < ActiveRecord::Base
     json_hash
   end
 
+  def imdb
+    @imdb ||= PersonExternal::IMDb.new(self)
+  end
+
+  def bing
+    @bing ||= PersonExternal::Bing.new(self)
+  end
+
   def freebase
     @freebase ||= PersonExternal::Freebase.new(self)
   end

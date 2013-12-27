@@ -16,7 +16,7 @@ module PersonExternal
     end
 
     def topic
-      imdbid = @person.google.imdbid
+      imdbid = @person.imdb.imdbid
       return nil if !imdbid
       search_result = search(imdbid)
       return nil if !search_result
@@ -58,15 +58,28 @@ module PersonExternal
     end
   end
 
-  class Google
+  class IMDb
     def initialize(person)
       @person = person
     end
 
     def imdbid
-      tmp_imdbid = Rails.rcache.get("person:#{@person.id}:externals:google:imdbid")
+      @person.bing.imdbid
+    end
+  end
+
+  class Bing
+    require 'open-uri'
+    BASEURL="http://www.bing.com/search?go=&qs=n&form=QBLH&filt=all&sc=0-14&sp=-1&sk=&format=rss&q="
+
+    def initialize(person)
+      @person = person
+    end
+
+    def imdbid
+      tmp_imdbid = Rails.rcache.get("person:#{@person.id}:externals:imdb:id")
       if !tmp_imdbid || tmp_imdbid.blank?
-        results = GoogleCustomSearchApi.search("\"#{@person.imdb_search_name}\" site:www.imdb.com/name")
+        results = search_rss
         found_exact = false
         find_one = results["items"].select do |item|
           tmp = item["link"][/^http:\/\/www.imdb.com\/name\/(nm\d+)\/$/]
@@ -77,10 +90,77 @@ module PersonExternal
         if find_one.size == 1
           tmp_imdbid = find_one.first[/^http:\/\/www.imdb.com\/name\/(nm\d+)\/$/,1]
         else
-          return nil
+          find_same = results["items"].select do |item|
+            tmp = item["link"][/^http:\/\/www.imdb.com\/name\/(nm\d+)\/.*$/,1]
+            next false if !tmp
+            tmp
+          end.uniq
+          if find_same.size == 1
+            tmp_imdbid = find_same.first
+          else
+            return nil
+          end
         end
 
-        Rails.rcache.set("person:#{@person.id}:externals:google:imdbid", tmp_imdbid)
+        Rails.rcache.set("person:#{@person.id}:externals:imdb:id", tmp_imdbid) if !tmp_imdbid
+      end
+      tmp_imdbid
+    end
+
+    def search_rss
+      query = URI.encode_www_form_component("\"#{@person.imdb_search_name}\" site:www.imdb.com/name")
+      open(BASEURL+query) do |u|
+        rssdata = u.read
+        doc = Nokogiri::XML(rssdata)
+        results = {}
+        results["items"] = []
+        doc.search("/rss/channel/item").each do |item|
+          link = item.search("link").text
+          title = item.search("title").text
+          results["items"] << {
+            "link" => link,
+            "title" => title
+          }
+        end
+        return results
+      end
+    end
+  end
+
+  class Google
+    def initialize(person)
+      @person = person
+    end
+
+    def imdbid
+      tmp_imdbid = Rails.rcache.get("person:#{@person.id}:externals:google:imdbid")
+      if !tmp_imdbid || tmp_imdbid.blank?
+        results = GoogleCustomSearchApi.search("\"#{@person.imdb_search_name}\" site:www.imdb.com/name")
+        pp results
+        found_exact = false
+        find_one = results["items"].select do |item|
+          tmp = item["link"][/^http:\/\/www.imdb.com\/name\/(nm\d+)\/$/]
+          pp tmp
+          next false if !tmp
+          tmp
+        end.map {|x| x["link"]}.uniq
+
+        if find_one.size == 1
+          tmp_imdbid = find_one.first[/^http:\/\/www.imdb.com\/name\/(nm\d+)\/$/,1]
+        else
+          find_same = results["items"].select do |item|
+            tmp = item["link"][/^http:\/\/www.imdb.com\/name\/(nm\d+)\/.*$/,1]
+            next false if !tmp
+            tmp
+          end.uniq
+          if find_same.size == 1
+            tmp_imdbid = find_same.first
+          else
+            return nil
+          end
+        end
+
+        Rails.rcache.set("person:#{@person.id}:externals:google:imdbid", tmp_imdbid) if !tmp_imdbid
       end
       tmp_imdbid
     end

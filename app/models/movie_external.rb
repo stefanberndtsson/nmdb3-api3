@@ -20,7 +20,7 @@ class MovieExternal
     end
 
     def topic
-      imdbid = @movie.google.imdbid
+      imdbid = @movie.imdb.imdbid
       return nil if !imdbid
       search_result = search(imdbid)
       return nil if !search_result
@@ -79,6 +79,70 @@ class MovieExternal
       id = thetvdb ? thetvdb.value[/\/authority\/thetvdb\/series\/(.*)/,1] : nil
       Rails.rcache.set("movie:#{@movie.id}:external:freebase:thetvdb:id", id, 1.minute)
       id
+    end
+  end
+
+  class IMDb
+    def initialize(movie)
+      @movie = movie
+    end
+
+    def imdbid
+      @movie.bing.imdbid
+    end
+  end
+
+  class Bing
+    require 'open-uri'
+    BASEURL="http://www.bing.com/search?go=&qs=n&form=QBLH&filt=all&sc=0-14&sp=-1&sk=&format=rss&q="
+
+    def initialize(movie)
+      @movie = movie
+    end
+
+    def imdbid
+      tmp_imdbid = @movie.imdb_id
+      if !tmp_imdbid
+        results = search_rss
+        found_exact = false
+        find_one = results["items"].select do |item|
+          tmp = item["link"][/^http:\/\/www.imdb.com\/title\/(tt\d+)\/$/]
+          next false if !tmp
+          if item["title"] == "#{@movie.imdb_search_title} - IMDb"
+            found_exact = true
+            next true
+          end
+          found_exact ? nil: tmp
+        end.map {|x| x["link"]}.uniq
+
+        if find_one.size == 1
+          tmp_imdbid = find_one.first[/^http:\/\/www.imdb.com\/title\/(tt\d+)\/$/,1]
+        else
+          return nil
+        end
+
+        @movie.update_attribute(:imdb_id, tmp_imdbid)
+      end
+      tmp_imdbid
+    end
+
+    def search_rss
+      query = URI.encode_www_form_component("\"#{@movie.imdb_search_title}\" site:www.imdb.com/title")
+      open(BASEURL+query) do |u|
+        rssdata = u.read
+        doc = Nokogiri::XML(rssdata)
+        results = {}
+        results["items"] = []
+        doc.search("/rss/channel/item").each do |item|
+          link = item.search("link").text
+          title = item.search("title").text
+          results["items"] << {
+            "link" => link,
+            "title" => title
+          }
+        end
+        return results
+      end
     end
   end
 

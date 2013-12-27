@@ -50,7 +50,7 @@ class PeopleController < ApplicationController
 
   def externals
     @person = Person.find(params[:id])
-    @imdbid = @person.google.imdbid
+    @imdbid = @person.imdb.imdbid
     @wikipedia = @person.freebase.wikipedia_pages
     render json: {
       imdb_id: @imdbid,

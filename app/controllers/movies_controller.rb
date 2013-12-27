@@ -56,7 +56,7 @@ class MoviesController < ApplicationController
 
   def externals
     @movie = Movie.find(params[:id])
-    @imdbid = @movie.google.imdbid
+    @imdbid = @movie.imdb.imdbid
     @wikipedia = @movie.freebase.wikipedia_pages
     @netflixid = @movie.freebase.netflixid
     @thetvdbid = @movie.freebase.thetvdbid
