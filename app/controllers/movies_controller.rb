@@ -83,4 +83,11 @@ class MoviesController < ApplicationController
       source: source
     }.compact
   end
+
+  def images
+    @movie = Movie.find(params[:id])
+    render json: {
+      tmdb: @movie.tmdb.images
+    }.compact
+  end
 end

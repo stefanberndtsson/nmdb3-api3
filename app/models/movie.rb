@@ -91,13 +91,24 @@ class Movie < ActiveRecord::Base
     pages << :trivia if trivia.count > 0
     pages << :goofs if goofs.count > 0
     pages << :quotes if quotes.count > 0
+    pages << :images if has_images?
     pages
+  end
+
+  def has_images?
+    return false if !tmdb
+    images = tmdb.images(true)
+    images && !(images["backdrops"].blank? && images["posters"].blank?)
   end
 
   def imdb
     @imdb ||= MovieExternal::IMDb.new(self)
   end
 
+  def tmdb
+    return nil if !defined?(TMDB_API_KEY)
+    @tmdb ||= MovieExternal::TMDb.new(self)
+  end
   def bing
     @bing ||= MovieExternal::Bing.new(self)
   end

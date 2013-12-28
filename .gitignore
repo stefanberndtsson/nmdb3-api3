@@ -8,7 +8,7 @@ doc/app
 db/schema.rb
 config/database.yml
 config/initializers/themoviedb_key.rb
-config/initializers/google_key.rb
+config/initializers/api_keys.rb
 *~
 \#*#
 .#*

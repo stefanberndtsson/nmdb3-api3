@@ -38,6 +38,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'quotes'
       get 'externals'
       get 'cover'
+      get 'images'
     end
   end
 
