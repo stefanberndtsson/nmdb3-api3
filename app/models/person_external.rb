@@ -90,7 +90,7 @@ module PersonExternal
         if find_one.size == 1
           tmp_imdbid = find_one.first[/^http:\/\/www.imdb.com\/name\/(nm\d+)\/$/,1]
         else
-          find_same = results["items"].select do |item|
+          find_same = results["items"].map do |item|
             tmp = item["link"][/^http:\/\/www.imdb.com\/name\/(nm\d+)\/.*$/,1]
             next false if !tmp
             tmp
