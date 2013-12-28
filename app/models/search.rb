@@ -18,16 +18,16 @@ class Search < ActiveRecord::Base
     people.query(query, max_results)
   end
 
-  def self.solr_query_movies(query)
+  def self.solr_query_movies(query, options = {})
     query = query.norm
     movies = Solr.new("movie")
-    movies.query(query)
+    movies.query(query, options)
   end
 
-  def self.solr_query_people(query)
+  def self.solr_query_people(query, options = {})
     query = query.norm
     people = Solr.new("person")
-    people.query(query)
+    people.query(query, options)
   end
 end
 
@@ -153,12 +153,14 @@ class Solr
     @raw_data = raw_data
   end
 
-  def query(query)
+  def query(query, options = {})
+    default_options = { limit: 20 }
+    options = default_options.merge(options)
     res = solr.get('select',
                params: {
                      q: query,
                      fq: "class:#{@classname}",
-                     rows: 20,
+                     rows: options[:limit],
                      fl: 'id,nmdb_id,score,class'+(@raw_data ? ",*" : ""),
                      boost: boost,
                      defType: 'edismax'

@@ -101,6 +101,7 @@ class Person < ActiveRecord::Base
 
   def active_pages
     pages = [:as_role]
+    pages += [:top_movies] if as_cast.count > 0
     pages += person_metadata.pluck(:key).uniq.map { |x| PersonMetadatum.page_from_key(x) }.uniq
   end
 
@@ -225,5 +226,21 @@ class Person < ActiveRecord::Base
       search_name += " (#{name_count})"
     end
     search_name
+  end
+
+  def top_movies
+    movies = Search.solr_query_movies("cast_ids:#{self.id}", limit: 50)
+    movie_ids = movies.map(&:id)
+    occs = Occupation.where(movie_id: movie_ids).where(person_id: self.id).group_by(&:movie_id)
+    movies.map do |movie|
+      next if !occs[movie.id]
+      {
+        id: movie.id,
+        movie: movie,
+        character: occs[movie.id].first.character,
+        extras: occs[movie.id].first.extras,
+        score: movie.score
+      }.compact
+    end.compact
   end
 end

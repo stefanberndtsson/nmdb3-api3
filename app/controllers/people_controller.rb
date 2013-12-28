@@ -74,6 +74,11 @@ class PeopleController < ApplicationController
     }.compact
   end
 
+  def top_movies
+    @person = Person.find(params[:id])
+    render json: @person.top_movies
+  end
+
   private
   def get_metadata(key_group, keys = nil)
     keys = PersonMetadatum.pages[key_group][:keys] if !keys

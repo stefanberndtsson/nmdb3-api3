@@ -64,7 +64,9 @@ class SearchesController < ApplicationController
       return
     end
 
-    @movies = Search.solr_query_movies(query)
+    options = {}
+    options[:limit] = params[:limit] if params[:limit]
+    @movies = Search.solr_query_movies(query, options)
     render json: @movies
   end
 
@@ -77,7 +79,9 @@ class SearchesController < ApplicationController
       return
     end
 
-    @people = Search.solr_query_people(query)
+    options = {}
+    options[:limit] = params[:limit] if params[:limit]
+    @people = Search.solr_query_people(query, options)
     render json: @people
   end
 end
