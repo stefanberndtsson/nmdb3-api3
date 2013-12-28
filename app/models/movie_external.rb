@@ -259,9 +259,10 @@ class MovieExternal
       box = infobox.first
       return nil if !box
       image = box["image"]
-      if image.match(/^(\[\[|)File:([^\|]+)(|\|.*)(\]\]|)$/)
-        image = $2
+      if image.match(/^(\[\[|)(File|Image):([^\|]+)(|\|.*)(\]\]|)$/)
+        image = $3
         image.gsub!(/\]\]$/,'')
+        image.gsub!(/^\[\[/,'')
       end
       @image ||= image
     end
