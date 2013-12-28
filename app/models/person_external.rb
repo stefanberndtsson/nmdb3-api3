@@ -102,7 +102,7 @@ module PersonExternal
           end
         end
 
-        Rails.rcache.set("person:#{@person.id}:externals:imdb:id", tmp_imdbid) if !tmp_imdbid
+        Rails.rcache.set("person:#{@person.id}:externals:imdb:id", tmp_imdbid) if tmp_imdbid
       end
       tmp_imdbid
     end
@@ -236,8 +236,8 @@ module PersonExternal
       box = infobox.first
       return nil if !box
       image = box["image"]
-      if image.match(/^\[\[File:([^\|]+)(|\|.*)\]\]$/)
-        image = $1
+      if image.match(/^(\[\[|)File:([^\|]+)(|\|.*)(\]\]|)$/)
+        image = $2
       end
       @image ||= image
     end

@@ -249,8 +249,8 @@ class MovieExternal
       box = infobox.select { |x| x["box_type"] == type[:type] }.first
       return nil if !box
       image = box[type[:image]]
-      if image.match(/^\[\[File:([^\|]+)(|\|.*)\]\]$/)
-        image = $1
+      if image.match(/^(\[\[|)File:([^\|]+)(|\|.*)(\]\]|)$/)
+        image = $2
       end
       @image ||= image
     end
