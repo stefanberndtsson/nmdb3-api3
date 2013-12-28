@@ -101,8 +101,15 @@ class Person < ActiveRecord::Base
 
   def active_pages
     pages = [:as_role]
-    pages += [:top_movies] if as_cast.count > 0
+    pages << :top_movies if as_cast.count > 0
+    pages << :images if has_images?
     pages += person_metadata.pluck(:key).uniq.map { |x| PersonMetadatum.page_from_key(x) }.uniq
+  end
+
+  def has_images?
+    return false if !tmdb
+    images = tmdb.images(true)
+    images && !images["profiles"].blank?
   end
 
   def array_as_hash(query)
@@ -177,6 +184,11 @@ class Person < ActiveRecord::Base
 
   def imdb
     @imdb ||= PersonExternal::IMDb.new(self)
+  end
+
+  def tmdb
+    return nil if !defined?(TMDB_API_KEY)
+    @tmdb ||= PersonExternal::TMDb.new(self)
   end
 
   def bing

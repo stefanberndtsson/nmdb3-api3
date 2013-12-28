@@ -281,4 +281,104 @@ module PersonExternal
       @image_url[size] ||= image_url
     end
   end
+
+  class TMDb
+    TMDB_API_URL="http://api.themoviedb.org/3"
+    TMDB_CFG_URL=TMDB_API_URL+"/configuration?api_key="+TMDB_API_KEY
+    IMAGE_SIZES = {
+      "profile" => {
+        thumb: 0,
+        medium: 1,
+        large: 2
+      },
+    }
+
+    def initialize(person)
+      @person = person
+      @config = config
+    end
+
+    def config
+      json_data = Rails.rcache.get("tmdb:config")
+      return JSON.parse(json_data) if json_data
+      begin
+        open(TMDB_CFG_URL) do |file|
+          json_data = file.read
+          Rails.rcache.set("tmdb:config", json_data, 1.week)
+          return JSON.parse(json_data)
+        end
+      rescue
+      end
+    end
+
+    def find
+      result = nil
+      imdbid = @person.imdb.imdbid
+      return nil if !imdbid
+      open(TMDB_API_URL+"/find/#{imdbid}?external_source=imdb_id&api_key="+TMDB_API_KEY) do |u|
+        result = JSON.parse(u.read)
+      end
+      if results_blank?(result)
+        return nil
+      end
+      extract_results(result)
+    end
+
+    def info(cache_only = false)
+      json_data = Rails.rcache.get("person:#{@person.id}:externals:tmdb:info")
+      return JSON.parse(json_data) if json_data
+      return nil if cache_only
+      results = find
+      return nil if !results
+      info = get(results["id"])
+      info["type"] = "person"
+      Rails.rcache.set("person:#{@person.id}:externals:tmdb:info", info.to_json, 1.week)
+      info
+    end
+
+    def get(tmdb_id, section = nil)
+      section = section ? "/#{section}" : ""
+      open(TMDB_API_URL+"/person/#{tmdb_id}#{section}?api_key="+TMDB_API_KEY) do |u|
+        return JSON.parse(u.read)
+      end
+    end
+
+    def results_blank?(results)
+      results["person_results"].blank?
+    end
+
+    def extract_results(results)
+      unless results["person_results"].blank?
+        results["person_results"].first["type"] = "person"
+        return results["person_results"].first
+      end
+      nil
+    end
+
+    def images(cache_only = false)
+      return nil if !info
+      json_images = Rails.rcache.get("person:#{@person.id}:externals:tmdb:images")
+      return JSON.parse(json_images) if json_images
+      return nil if cache_only
+      imgs = get(info["id"], "images")
+      imgs["profiles"].each_with_index do |img,i|
+        imgs["profiles"][i].merge!(image_urls(img, "profile"))
+      end
+      Rails.rcache.set("person:#{@person.id}:externals:tmdb:images", imgs.to_json, 1.week)
+      imgs
+    end
+
+    def image_urls(img, type)
+      base = @config["images"]["base_url"]
+      thumb = @config["images"]["#{type}_sizes"][IMAGE_SIZES[type][:thumb]]
+      medium = @config["images"]["#{type}_sizes"][IMAGE_SIZES[type][:medium]]
+      large = @config["images"]["#{type}_sizes"][IMAGE_SIZES[type][:large]]
+      {
+        "image_url_thumb" => base+thumb+img["file_path"],
+        "image_url_medium" => base+medium+img["file_path"],
+        "image_url_large" => base+large+img["file_path"],
+        "image_url" => base+"original"+img["file_path"]
+      }
+    end
+  end
 end

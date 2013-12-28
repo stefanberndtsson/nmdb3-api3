@@ -26,7 +26,7 @@ class RedisStore
   end
 
   def keys(pattern = "*")
-    redis.keys(STORE_PREFIX+pattern)
+    redis.keys(STORE_PREFIX+pattern).map { |x| x[STORE_PREFIX.size..-1]}
   end
 
   def del(key)

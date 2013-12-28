@@ -24,6 +24,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'externals'
       get 'cover'
       get 'top_movies'
+      get 'images'
     end
   end
 
