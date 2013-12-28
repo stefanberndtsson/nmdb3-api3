@@ -8,6 +8,7 @@ class MovieExternal
   class Freebase
     def initialize(movie)
       @movie = movie
+      FreebaseAPI.session = FreebaseAPI::Session.new(key: GOOGLE_API_KEY)
     end
 
     def search(query)

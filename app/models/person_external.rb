@@ -8,6 +8,7 @@ module PersonExternal
   class Freebase
     def initialize(person)
       @person = person
+      FreebaseAPI.session = FreebaseAPI::Session.new(key: GOOGLE_API_KEY)
     end
 
     def search(query)
