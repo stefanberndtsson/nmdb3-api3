@@ -20,7 +20,7 @@ class MovieExternal
     end
 
     def topic
-      imdbid = @movie.imdb.imdbid
+      imdbid = @movie.is_episode ? @movie.main.imdb.imdbid : @movie.imdb.imdbid
       return nil if !imdbid
       search_result = search(imdbid)
       return nil if !search_result
