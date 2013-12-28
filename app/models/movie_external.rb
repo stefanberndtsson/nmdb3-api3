@@ -404,6 +404,7 @@ class MovieExternal
       imgs["posters"].each_with_index do |img,i|
         imgs["posters"][i].merge!(image_urls(img, "poster"))
       end
+      return nil if imgs["backdrops"].blank? && imgs["posters"].blank?
       Rails.rcache.set("movie:#{@movie.id}:externals:tmdb:images", imgs.to_json, 1.week)
       imgs
     end

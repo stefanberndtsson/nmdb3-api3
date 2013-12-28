@@ -364,6 +364,7 @@ module PersonExternal
       imgs["profiles"].each_with_index do |img,i|
         imgs["profiles"][i].merge!(image_urls(img, "profile"))
       end
+      return nil if imgs["profiles"].blank?
       Rails.rcache.set("person:#{@person.id}:externals:tmdb:images", imgs.to_json, 1.week)
       imgs
     end
