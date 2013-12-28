@@ -12,8 +12,12 @@ module PersonExternal
     end
 
     def search(query)
+      topic_id = Rails.rcache.get("person:#{@person.id}:external:freebase:topic:id")
+      return topic_id if topic_id
       res = FreebaseAPI::Topic.search(query, filter: "(all type:person)")
       @query ||= res.first ? res.first.last.id : nil
+      Rails.rcache.set("person:#{@person.id}:external:freebase:topic:id", @query, 1.day) if @query
+      @query
     end
 
     def topic

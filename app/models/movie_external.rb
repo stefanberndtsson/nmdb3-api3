@@ -12,12 +12,16 @@ class MovieExternal
     end
 
     def search(query)
+      topic_id = Rails.rcache.get("movie:#{@movie.id}:external:freebase:topic:id")
+      return topic_id if topic_id
       type = "/film/film"
       if @movie.category_code == "TVS"
         type = "/tv/tv_program"
       end
       res = FreebaseAPI::Topic.search(query, filter: "(all type:topic)")
       @query ||= res.first ? res.first.last.id : nil
+      Rails.rcache.set("movie:#{@movie.id}:external:freebase:topic:id", @query, 1.day) if @query
+      @query
     end
 
     def topic

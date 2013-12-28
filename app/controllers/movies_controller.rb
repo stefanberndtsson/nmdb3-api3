@@ -60,8 +60,10 @@ class MoviesController < ApplicationController
     @wikipedia = @movie.freebase.wikipedia_pages
     @netflixid = @movie.freebase.netflixid
     @thetvdbid = @movie.freebase.thetvdbid
+    @freebase_topic = @movie.freebase.search(@imdbid)
     render json: {
       imdb_id: @imdbid,
+      freebase_topic: @freebase_topic,
       wikipedia: @wikipedia.compact,
       netflix_id: @netflixid,
       thetvdb_id: @thetvdbid
