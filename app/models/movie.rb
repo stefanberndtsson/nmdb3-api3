@@ -118,24 +118,25 @@ class Movie < ActiveRecord::Base
   end
 
   def cover_image_cache_key(size = 640)
-    "movie:#{self.id}:externals:wikipedia:cover"
+    movie_id = is_episode ? self.main.id : self.id
+    "movie:#{movie_id}:externals:wikipedia:cover"
   end
 
   def cover_image(size = 640)
-    image_url = Rails.rcache.get("movie:#{self.id}:externals:wikipedia:cover")
+    image_url = Rails.rcache.get(cover_image_cache_key(size))
     if image_url && image_url != ""
       return image_url
     end
     if !wikipedia
-      Rails.rcache.set("movie:#{self.id}:externals:wikipedia:cover", nil, 1.day)
+      Rails.rcache.set(cover_image_cache_key(size), nil, 1.day)
       return nil
     end
     image_url = wikipedia.image_url(size)
     if !image_url
-      Rails.rcache.set("movie:#{self.id}:externals:wikipedia:cover", nil, 1.day)
+      Rails.rcache.set(cover_image_cache_key(size), nil, 1.day)
       return nil
     end
-    Rails.rcache.set("movie:#{self.id}:externals:wikipedia:cover", image_url, 1.day)
+    Rails.rcache.set(cover_image_cache_key(size), image_url, 1.day)
     image_url
   end
 
