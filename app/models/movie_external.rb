@@ -15,7 +15,7 @@ class MovieExternal
       if @movie.category_code == "TVS"
         type = "/tv/tv_program"
       end
-      res = FreebaseAPI::Topic.search(query, filter: "(all type:#{type})")
+      res = FreebaseAPI::Topic.search(query, filter: "(all type:topic)")
       @query ||= res.first ? res.first.last.id : nil
     end
 
@@ -239,16 +239,15 @@ class MovieExternal
 
     def title
       type = TYPES[CATEGORIES[@movie.category_code]]
-      box = infobox.select { |x| x["box_type"] == type[:type] }.first
+      box = infobox.first
       return nil if !box
       @title ||= box[type[:title]]
     end
 
     def image
-      type = TYPES[CATEGORIES[@movie.category_code]]
-      box = infobox.select { |x| x["box_type"] == type[:type] }.first
+      box = infobox.first
       return nil if !box
-      image = box[type[:image]]
+      image = box["image"]
       if image.match(/^(\[\[|)File:([^\|]+)(|\|.*)(\]\]|)$/)
         image = $2
       end
