@@ -62,7 +62,7 @@ class Movie < ActiveRecord::Base
                category: category,
                score: @score,
              })
-    if Rails.rcache.get(cover_image_cache_key)
+    if !@score && Rails.rcache.get(cover_image_cache_key)
       json_hash[:image_url] = cover_image
     end
     json_hash.delete("title_category")

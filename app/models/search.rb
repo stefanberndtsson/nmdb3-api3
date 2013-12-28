@@ -167,11 +167,7 @@ class Solr
                    })
     return res if @raw_data
     ids = res["response"]["docs"].map { |x| x["nmdb_id"] }
-    objects = doc_objects(ids)
-    if @source_class == "movie"
-      object = objects.includes(:main)
-    end
-    objects = objects.group_by(&:id)
+    objects = doc_objects(ids).group_by(&:id)
     res["response"]["docs"].map do |doc|
       tmp = objects[doc["nmdb_id"]].first
       tmp.score = doc["score"]
