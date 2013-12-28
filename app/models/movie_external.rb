@@ -126,8 +126,9 @@ class MovieExternal
       tmp_imdbid
     end
 
-    def search_rss
-      query = URI.encode_www_form_component("\"#{@movie.imdb_search_title}\" site:www.imdb.com/title")
+    def search_rss(force_query = nil)
+      query_string = force_query || @movie.imdb_search_title
+      query = URI.encode_www_form_component("\"#{query_string}\" site:www.imdb.com/title")
       open(BASEURL+query) do |u|
         rssdata = u.read
         doc = Nokogiri::XML(rssdata)

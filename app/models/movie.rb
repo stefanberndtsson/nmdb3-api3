@@ -143,6 +143,9 @@ class Movie < ActiveRecord::Base
     if title_category == "TVS"
       return full_title.gsub(/^"(.*)" \(/, '\1 (')
     end
+    if title_category == "VG"
+      return full_title
+    end
     if title_category
       cpos = full_title.rindex("(#{title_category})")
       if cpos
