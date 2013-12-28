@@ -167,9 +167,13 @@ class Solr
                    })
     return res if @raw_data
     ids = res["response"]["docs"].map { |x| x["nmdb_id"] }
-    movies = doc_objects(ids).group_by(&:id)
+    objects = doc_objects(ids)
+    if @source_class == "movie"
+      object = objects.includes(:main)
+    end
+    objects = objects.group_by(&:id)
     res["response"]["docs"].map do |doc|
-      tmp = movies[doc["nmdb_id"]].first
+      tmp = objects[doc["nmdb_id"]].first
       tmp.score = doc["score"]
       tmp
     end
@@ -198,6 +202,6 @@ class Solr
   end
 
   def doc_objects(doc_ids)
-    Kernel.const_get(@source_class).send(:find, doc_ids)
+    Kernel.const_get(@source_class).send(:where, { id: doc_ids})
   end
 end
