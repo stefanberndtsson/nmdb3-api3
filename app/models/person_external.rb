@@ -238,6 +238,7 @@ module PersonExternal
       image = box["image"]
       if image.match(/^(\[\[|)File:([^\|]+)(|\|.*)(\]\]|)$/)
         image = $2
+        image.gsub!(/\]\]$/,'')
       end
       @image ||= image
     end

@@ -118,7 +118,16 @@ class MovieExternal
         if find_one.size == 1
           tmp_imdbid = find_one.first[/^http:\/\/www.imdb.com\/title\/(tt\d+)\/$/,1]
         else
-          return nil
+          find_same = results["items"].map do |item|
+            tmp = item["link"][/^http:\/\/www.imdb.com\/title\/(tt\d+)\/.*$/,1]
+            next false if !tmp
+            tmp
+          end.uniq
+          if find_same.size == 1
+            tmp_imdbid = find_same.first
+          else
+            return nil
+          end
         end
 
         @movie.update_attribute(:imdb_id, tmp_imdbid)
@@ -251,6 +260,7 @@ class MovieExternal
       image = box["image"]
       if image.match(/^(\[\[|)File:([^\|]+)(|\|.*)(\]\]|)$/)
         image = $2
+        image.gsub!(/\]\]$/,'')
       end
       @image ||= image
     end
