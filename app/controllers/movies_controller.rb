@@ -47,7 +47,15 @@ class MoviesController < ApplicationController
 
   def goofs
     @goofs = Goof.where(movie_id: params[:id])
-    render json: @goofs
+    groups = @goofs.group_by { |x| x.category }
+    categories = groups.keys.map do |category_code|
+      {
+        category_code: category_code,
+        category_display: groups[category_code].first.category_display,
+        goofs: groups[category_code]
+      }
+    end
+    render json: categories
   end
 
   def quotes
