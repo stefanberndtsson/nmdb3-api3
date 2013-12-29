@@ -49,19 +49,7 @@ class Movie < ActiveRecord::Base
   end
 
   def strong_keywords
-    strong = []
-    plots.each do |plot|
-      next if !plot || !plot.plot_norm
-      tmpplot = plot.plot_norm.downcase.gsub("-", " ").gsub(/[^ a-z0-9]/, "")
-      keywords.each do |keyword|
-        tmpkeyword = keyword.keyword.downcase.gsub("-", " ").gsub(/[^ a-z0-9]/, "").norm
-        if tmpplot.index(tmpkeyword)
-          keyword.strong = true
-          strong << keyword
-        end
-      end
-    end
-    strong.uniq
+    Keyword.strong_keywords(self)
   end
 
   def as_json(options = {})

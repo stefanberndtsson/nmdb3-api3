@@ -3,6 +3,22 @@ class Keyword < ActiveRecord::Base
   has_many :movies, :through => :movie_keyword
   attr_accessor :strong
 
+  def self.strong_keywords(movie)
+    strong = []
+    movie.plots.each do |plot|
+      next if !plot || !plot.plot_norm
+      tmpplot = plot.plot_norm.downcase.gsub("-", " ").gsub(/[^ a-z0-9]/, "")
+      movie.keywords.each do |keyword|
+        tmpkeyword = keyword.keyword.downcase.gsub("-", " ").gsub(/[^ a-z0-9]/, "").norm
+        if tmpplot.index(tmpkeyword)
+          keyword.strong = true
+          strong << keyword
+        end
+      end
+    end
+    strong.uniq
+  end
+
   def display
     kw = keyword
     keepdash.each do |kd|
