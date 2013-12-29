@@ -6,13 +6,22 @@ class Movie < ActiveRecord::Base
   has_many :movie_keywords
   has_many :keywords, :through => :movie_keywords
   has_many :movie_years
-  has_many :episodes, :foreign_key => :parent_id, :class_name => "Movie"
+  has_many :episodes, -> {
+    includes([:plots, :release_dates])
+    .select(["*", "ARRAY[COALESCE(episode_season,0),COALESCE(episode_episode,0),COALESCE(movie_sort_value,0)] AS episode_sort_value"])
+    .order("episode_sort_value")
+  }, :foreign_key => :parent_id, :class_name => "Movie"
   has_many :plots
   has_many :trivia
   has_many :goofs
   has_many :quotes
+  has_many :release_dates
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
+
+  def first_release_date
+    release_dates.sort_by(&:release_stamp).first
+  end
 
   def display
     full_title
@@ -66,6 +75,7 @@ class Movie < ActiveRecord::Base
       json_hash[:image_url] = cover_image
     end
     json_hash.delete("title_category")
+    json_hash.delete("episode_sort_value")
     json_hash.compact
   end
 
@@ -92,6 +102,7 @@ class Movie < ActiveRecord::Base
     pages << :goofs if goofs.count > 0
     pages << :quotes if quotes.count > 0
     pages << :images if has_images?
+    pages << :episodes if episodes.count > 0
     pages
   end
 
@@ -165,5 +176,21 @@ class Movie < ActiveRecord::Base
       end
     end
     return full_title
+  end
+
+  # Episode
+  def episode_index
+    main.episodes.index(self)
+  end
+
+  def next_episode
+    return nil if !is_episode
+    main.episodes[episode_index + 1]
+  end
+
+  def prev_episode
+    return nil if !is_episode
+    return nil if episode_index == 0
+    main.episodes[episode_index - 1]
   end
 end

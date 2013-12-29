@@ -90,4 +90,26 @@ class MoviesController < ApplicationController
       tmdb: @movie.tmdb.images
     }.compact
   end
+
+  def episodes
+    @movie = Movie.find(params[:id])
+    seasons = []
+    episodes = @movie.episodes.map do |episode|
+      seasons << episode.episode_season || "Unknown"
+      {
+        episode: episode,
+        plot: episode.plots.sort_by { |x| -x.plot_norm.size}.first,
+        release_date: episode.first_release_date
+      }.compact
+    end.group_by { |x| x[:episode].episode_season }
+    seasons = seasons.uniq.map do |season|
+      {
+        season: season,
+        episodes: episodes[season]
+      }
+    end
+    render json: {
+      seasons: seasons
+    }.compact
+  end
 end
