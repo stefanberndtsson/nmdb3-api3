@@ -65,8 +65,15 @@ class Movie < ActiveRecord::Base
       json_hash[:image_url] = cover_image
     end
     if fetch_full && is_episode
-      json_hash[:prev_episode] = prev_episode.episode_data if prev_episode
-      json_hash[:next_episode] = next_episode.episode_data if next_episode
+      json_hash[:prev_episode] = prev_episode.short_data if prev_episode
+      json_hash[:next_episode] = next_episode.short_data if next_episode
+    end
+    if fetch_full
+      next_f = next_followed
+      prev_f = prev_followed
+      json_hash[:next_followed] = next_followed.short_data if next_f
+      json_hash[:prev_followed] = prev_followed.short_data if prev_f
+      json_hash[:is_linked] = true if next_f || prev_f
     end
     json_hash.delete("title_category")
     json_hash.delete("episode_sort_value")
@@ -189,8 +196,7 @@ class Movie < ActiveRecord::Base
     main.episodes[episode_index - 1]
   end
 
-  def episode_data
-    return nil if !is_episode
+  def short_data
     {
       id: id,
       full_title: full_title,
@@ -203,5 +209,32 @@ class Movie < ActiveRecord::Base
       movie_sort_value: movie_sort_value,
       first_release_date: first_release_date
     }
+  end
+
+  # Connections
+  def next_followed
+    followed_by = MovieConnectionType.find_by_connection_type("followed by")
+    mc = movie_connections.where(movie_connection_type_id: followed_by.id)
+    return nil if mc.empty?
+    selected = mc.select do |x|
+      !x.linked_movie.suspended
+    end
+    return nil if selected.empty?
+    selected.sort_by do |x|
+      [x.linked_movie.title_year == "????" ? 99999 : x.linked_movie.title_year.to_i, (x.linked_movie.movie_sort_value || 0)]
+    end.first.linked_movie
+  end
+
+  def prev_followed
+    follows = MovieConnectionType.find_by_connection_type("follows")
+    mc = movie_connections.where(movie_connection_type_id: follows.id)
+    return nil if mc.empty?
+    selected = mc.select do |x|
+      !x.linked_movie.suspended
+    end
+    return nil if selected.empty?
+    selected.sort_by do |x|
+      [-(x.linked_movie.title_year == "????" ? 99999 : x.linked_movie.title_year.to_i), -(x.linked_movie.movie_sort_value || 0)]
+    end.first.linked_movie
   end
 end
