@@ -166,7 +166,11 @@ class Movie < ActiveRecord::Base
 
   def imdb_search_title
     if title_category == "TVS"
-      return full_title.gsub(/^"(.*)" \(/, '\1 (')
+      if episode_name
+        return "#{title} \"#{episode_name}\""
+      else
+        return full_title.gsub(/^"(.*)" \(/, '\1 (')
+      end
     end
     if title_category == "VG"
       return full_title

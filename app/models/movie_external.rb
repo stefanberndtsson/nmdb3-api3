@@ -88,12 +88,67 @@ class MovieExternal
   end
 
   class IMDb
+    IMDB_BASE="http://www.imdb.com/title/"
+    MC_PAGE="/trivia?tab=mc"
+
     def initialize(movie)
       @movie = movie
     end
 
     def imdbid
       @movie.bing.imdbid
+    end
+
+    def movie_connection_data
+      return nil if @movie.movie_connections.count == 0
+      page = movie_connection_page
+      doc = Nokogiri::HTML(page)
+      content = doc.search("#connections_content .list")
+      groups = content.search("a[@name]")
+      grouped_data = {}
+      groups.each do |group|
+        group_name = group.attr("name").gsub(/_/," ")
+        grouped_data[group_name] = []
+        current_sibling = group.next_sibling
+        while(!((current_sibling.node_name == "a") && current_sibling.attr("name")))
+          if(current_sibling.node_name == "div" &&
+              current_sibling.attr("class")[/^soda (odd|even)/])
+            item_link = current_sibling.search("a[@href]")
+            item_imdbid = item_link.first.attr("href").gsub(/\/title\/(.*)\//, '\1')
+            item_text = ""
+            if current_sibling.search("br").first
+              item_text = current_sibling.search("br").first.next_sibling.text
+            end
+            if item_link && item_link.first && item_link.first.next_sibling
+              item_title = item_link.text + " " + item_link.first.next_sibling.text.gsub(/\u00a0/,""
+).trim
+              grouped_data[group_name] << {
+                :title => item_title.to_s,
+                :imdbid => item_imdbid.to_s,
+                :text => item_text.to_s.trim
+              }
+            end
+          end
+          current_sibling = current_sibling.next_sibling
+          break if !current_sibling
+        end
+      end
+
+      grouped_data
+    end
+
+    def movie_connection_page
+      cached_page = Rails.rcache.get("movie:#{@movie.id}:externals:imdb:movie_connections:page")
+      return cached_page if cached_page
+      open(movie_connection_url) do |u|
+        page_data = u.read
+        Rails.rcache.set("movie:#{@movie.id}:externals:imdb:movie_connections:page", page_data, 1.week)
+        return page_data
+      end
+    end
+
+    def movie_connection_url
+      IMDB_BASE+imdbid+MC_PAGE
     end
   end
 
@@ -108,6 +163,7 @@ class MovieExternal
     def imdbid
       tmp_imdbid = @movie.imdb_id
       if !tmp_imdbid
+        return nil if Rails.rcache.get("movie:#{@movie.id}:externals:imdb:failed_scan")
         results = search_rss
         found_exact = false
         find_one = results["items"].select do |item|
@@ -131,6 +187,7 @@ class MovieExternal
           if find_same.size == 1
             tmp_imdbid = find_same.first
           else
+            Rails.rcache.set("movie:#{@movie.id}:externals:imdb:failed_scan", true, 1.week)
             return nil
           end
         end
@@ -142,7 +199,8 @@ class MovieExternal
 
     def search_rss(force_query = nil)
       query_string = force_query || @movie.imdb_search_title
-      query = URI.encode_www_form_component("\"#{query_string}\" site:www.imdb.com/title")
+      extra_query = "Full Cast & Crew"
+      query = URI.encode_www_form_component("\"#{query_string}\" \"#{extra_query}\" site:www.imdb.com/title")
       open(BASEURL+query) do |u|
         rssdata = u.read
         doc = Nokogiri::XML(rssdata)

@@ -1,11 +1,12 @@
 class MovieConnectionText < ActiveRecord::Base
   def self.store(m_id, l_id, ct_id, text)
     @@mc_store ||= { }
-    @@mc_store[[m_id,l_id,ct_id]] ||= MovieConnectionText.
-      find_or_create_by_movie_id_and_linked_movie_id_and_movie_connection_type_id(movie_id: m_id,
-                                                                               linked_movie_id: l_id,
-                                                                               movie_connection_type_id: ct_id,
-                                                                               value: text)
+    @@mc_store[[m_id,l_id,ct_id]] ||=
+      MovieConnectionText.find_or_create_by(movie_id: m_id,
+                                         linked_movie_id: l_id,
+                                         movie_connection_type_id: ct_id) do |mct|
+      mct.value = text.blank? ? "[NONE]" : text
+    end
   end
 
   def self.fetch(m_id)
