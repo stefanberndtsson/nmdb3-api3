@@ -229,7 +229,7 @@ class Person < ActiveRecord::Base
       Rails.rcache.set("person:#{self.id}:externals:wikipedia:cover", nil, 1.day)
       return nil
     end
-    Rails.rcache.set("person:#{self.id}:externals:wikipedia:cover", image_url, 1.day)
+    Rails.rcache.set("person:#{self.id}:externals:wikipedia:cover", image_url, 1.month)
     image_url
   end
 

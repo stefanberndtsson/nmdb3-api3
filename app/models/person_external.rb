@@ -16,7 +16,7 @@ module PersonExternal
       return topic_id if topic_id
       res = FreebaseAPI::Topic.search(query, filter: "(all type:person)")
       @query ||= res.first ? res.first.last.id : nil
-      Rails.rcache.set("person:#{@person.id}:external:freebase:topic:id", @query, 1.day) if @query
+      Rails.rcache.set("person:#{@person.id}:external:freebase:topic:id", @query, 1.week) if @query
       @query
     end
 
@@ -51,11 +51,11 @@ module PersonExternal
             lang = $1
             title = decode_string($2)
             titles[lang] = title
-            Rails.rcache.set("person:#{@person.id}:external:freebase:wikipedia_page:#{i}:lang", lang, 1.minute)
-            Rails.rcache.set("person:#{@person.id}:external:freebase:wikipedia_page:#{i}:title", title, 1.minute)
+            Rails.rcache.set("person:#{@person.id}:external:freebase:wikipedia_page:#{i}:lang", lang, 1.week)
+            Rails.rcache.set("person:#{@person.id}:external:freebase:wikipedia_page:#{i}:title", title, 1.week)
             Rails.rcache.set("person:#{@person.id}:external:freebase:wikipedia_page_count",
                          Rails.rcache.get("person:#{@person.id}:external:freebase:wikipedia_page_count").to_i+1,
-                         1.minute)
+                         1.week)
           end
         end
       end

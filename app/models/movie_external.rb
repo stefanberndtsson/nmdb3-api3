@@ -20,7 +20,7 @@ class MovieExternal
       end
       res = FreebaseAPI::Topic.search(query, filter: "(all type:topic)")
       @query ||= res.first ? res.first.last.id : nil
-      Rails.rcache.set("movie:#{@movie.id}:external:freebase:topic:id", @query, 1.day) if @query
+      Rails.rcache.set("movie:#{@movie.id}:external:freebase:topic:id", @query, 1.week) if @query
       @query
     end
 
@@ -55,11 +55,11 @@ class MovieExternal
             lang = $1
             title = decode_string($2)
             titles[lang] = title
-            Rails.rcache.set("movie:#{@movie.id}:external:freebase:wikipedia_page:#{i}:lang", lang, 1.minute)
-            Rails.rcache.set("movie:#{@movie.id}:external:freebase:wikipedia_page:#{i}:title", title, 1.minute)
+            Rails.rcache.set("movie:#{@movie.id}:external:freebase:wikipedia_page:#{i}:lang", lang, 1.week)
+            Rails.rcache.set("movie:#{@movie.id}:external:freebase:wikipedia_page:#{i}:title", title, 1.week)
             Rails.rcache.set("movie:#{@movie.id}:external:freebase:wikipedia_page_count",
                          Rails.rcache.get("movie:#{@movie.id}:external:freebase:wikipedia_page_count").to_i+1,
-                         1.minute)
+                         1.week)
           end
         end
       end
@@ -72,7 +72,7 @@ class MovieExternal
       return nil if !topic
       netflix = topic.property('/type/object/key').select { |x| x.value[/^\/authority\/netflix\/movie\/(.*)$/] }.first
       id = netflix ? netflix.value[/\/authority\/netflix\/movie\/(.*)/,1] : nil
-      Rails.rcache.set("movie:#{@movie.id}:external:freebase:netflix:id", id, 1.minute)
+      Rails.rcache.set("movie:#{@movie.id}:external:freebase:netflix:id", id, 1.week)
       id
     end
 
@@ -82,7 +82,7 @@ class MovieExternal
       return nil if !topic
       thetvdb = topic.property('/type/object/key').select { |x| x.value[/^\/authority\/thetvdb\/series\/(.*)$/] }.first
       id = thetvdb ? thetvdb.value[/\/authority\/thetvdb\/series\/(.*)/,1] : nil
-      Rails.rcache.set("movie:#{@movie.id}:external:freebase:thetvdb:id", id, 1.minute)
+      Rails.rcache.set("movie:#{@movie.id}:external:freebase:thetvdb:id", id, 1.week)
       id
     end
   end

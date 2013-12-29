@@ -160,7 +160,7 @@ class Movie < ActiveRecord::Base
       Rails.rcache.set(cover_image_cache_key(size), nil, 1.day)
       return nil
     end
-    Rails.rcache.set(cover_image_cache_key(size), image_url, 1.day)
+    Rails.rcache.set(cover_image_cache_key(size), image_url, 1.month)
     image_url
   end
 
