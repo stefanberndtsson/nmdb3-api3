@@ -16,6 +16,7 @@ class Movie < ActiveRecord::Base
   has_many :goofs
   has_many :quotes
   has_many :release_dates
+  has_many :movie_connections, -> { includes([:movie_connection_type, :linked_movie]) }
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
   attr_accessor :fetch_full
@@ -96,6 +97,7 @@ class Movie < ActiveRecord::Base
     pages << :quotes if quotes.count > 0
     pages << :images if has_images?
     pages << :episodes if episodes.count > 0
+    pages << :connections if movie_connections.count > 0
     pages
   end
 
