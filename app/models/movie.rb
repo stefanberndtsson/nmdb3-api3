@@ -62,6 +62,10 @@ class Movie < ActiveRecord::Base
     if !@score && Rails.rcache.get(cover_image_cache_key)
       json_hash[:image_url] = cover_image
     end
+    if is_episode
+      json_hash[:prev_episode] = prev_episode.episode_data if prev_episode
+      json_hash[:next_episode] = next_episode.episode_data if next_episode
+    end
     json_hash.delete("title_category")
     json_hash.delete("episode_sort_value")
     json_hash.compact
@@ -180,5 +184,21 @@ class Movie < ActiveRecord::Base
     return nil if !is_episode
     return nil if episode_index == 0
     main.episodes[episode_index - 1]
+  end
+
+  def episode_data
+    return nil if !is_episode
+    {
+      id: id,
+      full_title: full_title,
+      title: title,
+      parent_id: parent_id,
+      title_year: title_year,
+      episode_season: episode_season,
+      episode_episode: episode_episode,
+      episode_name: episode_name,
+      movie_sort_value: movie_sort_value,
+      first_release_date: first_release_date
+    }
   end
 end
