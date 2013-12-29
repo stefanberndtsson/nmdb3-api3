@@ -18,7 +18,7 @@ class Movie < ActiveRecord::Base
   has_many :release_dates
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
-  attr_accessor :reduce_fetching
+  attr_accessor :fetch_full
 
   def first_release_date
     release_dates.sort_by(&:release_stamp).first
@@ -60,10 +60,10 @@ class Movie < ActiveRecord::Base
                category: category,
                score: @score,
              })
-    if !reduce_fetching && Rails.rcache.get(cover_image_cache_key)
+    if fetch_full && Rails.rcache.get(cover_image_cache_key)
       json_hash[:image_url] = cover_image
     end
-    if !reduce_fetching && is_episode
+    if fetch_full && is_episode
       json_hash[:prev_episode] = prev_episode.episode_data if prev_episode
       json_hash[:next_episode] = next_episode.episode_data if next_episode
     end

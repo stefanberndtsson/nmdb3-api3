@@ -3,6 +3,7 @@ class Person < ActiveRecord::Base
   has_many :movies, :through => :occupations
   has_many :person_metadata
   attr_accessor :score
+  attr_accessor :fetch_full  # Only dummy for now
 
   def display
     [first_name, last_name].join(" ")
@@ -245,7 +246,6 @@ class Person < ActiveRecord::Base
     movie_ids = movies.map(&:id)
     occs = Occupation.where(movie_id: movie_ids).where(person_id: self.id).group_by(&:movie_id)
     movies.map do |movie|
-      movie.reduce_fetching = true
       next if !occs[movie.id]
       {
         id: movie.id,

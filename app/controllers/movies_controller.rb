@@ -4,6 +4,7 @@ class MoviesController < ApplicationController
 
   def show
     @movie = Movie.find(params[:id])
+    @movie.fetch_full = true
     if params[:full]
       render json: {
         movie: @movie,
