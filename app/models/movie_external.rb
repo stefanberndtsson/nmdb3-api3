@@ -399,7 +399,7 @@ class MovieExternal
     def find(use_parent = false)
       result = nil
       imdbid = use_parent ? @movie.main.imdb.imdbid : @movie.imdb.imdbid
-      if !imdbid && !use_parent
+      if !imdbid && !use_parent && @movie.is_episode
         imdbid = @movie.main.imdb.imdbid
       end
       return nil if !imdbid
