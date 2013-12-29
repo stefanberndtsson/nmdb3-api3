@@ -7,11 +7,17 @@ class MovieConnectionText < ActiveRecord::Base
                                          movie_connection_type_id: ct_id) do |mct|
       mct.value = text.blank? ? "[NONE]" : text
     end
+    fetch(m_id, true)
+    @@mc_store[[m_id,l_id,ct_id]]
   end
 
-  def self.fetch(m_id)
+  def self.fetch(m_id, refetch = false)
     @@mc_text ||= { }
-    @@mc_text[m_id] ||= MovieConnectionText.where(movie_id: m_id).group_by { |x| [x.linked_movie_id, x.movie_connection_type_id] }
+    if refetch
+      @@mc_text[m_id] = MovieConnectionText.where(movie_id: m_id).group_by { |x| [x.linked_movie_id, x.movie_connection_type_id] }
+    else
+      @@mc_text[m_id] ||= MovieConnectionText.where(movie_id: m_id).group_by { |x| [x.linked_movie_id, x.movie_connection_type_id] }
+    end
     @@mc_text.delete(m_id) if @@mc_text[m_id].blank?
     @@mc_text[m_id]
   end
