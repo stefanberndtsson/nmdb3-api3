@@ -245,6 +245,7 @@ class Person < ActiveRecord::Base
     movie_ids = movies.map(&:id)
     occs = Occupation.where(movie_id: movie_ids).where(person_id: self.id).group_by(&:movie_id)
     movies.map do |movie|
+      movie.reduce_fetching = true
       next if !occs[movie.id]
       {
         id: movie.id,
