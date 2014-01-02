@@ -52,7 +52,7 @@ class PeopleController < ApplicationController
     @person = Person.find(params[:id])
     @imdbid = @person.imdb.imdbid
     @wikipedia = @person.freebase.wikipedia_pages
-    @freebase_topic = @person.freebase.search(@imdbid)
+    @freebase_topic = @person.freebase.search
     render json: {
       imdb_id: @imdbid,
       freebase_topic: @freebase_topic,

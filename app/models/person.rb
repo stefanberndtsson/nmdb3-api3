@@ -233,7 +233,7 @@ class Person < ActiveRecord::Base
     image_url
   end
 
-  def imdb_search_name
+  def imdb_search_text
     search_name = [first_name, last_name].join(" ")
     if name_count
       search_name += " (#{name_count})"

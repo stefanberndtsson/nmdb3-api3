@@ -7,7 +7,7 @@ Nmdb3Api3::Application.configure do
   config.cache_classes = false
 
   # Do not eager load code on boot.
-  config.eager_load = false
+  config.eager_load = true
 
   # Show full error reports and disable caching.
   config.consider_all_requests_local       = true
@@ -26,4 +26,7 @@ Nmdb3Api3::Application.configure do
   # This option may cause significant delays in view rendering with a large
   # number of complex assets.
   config.assets.debug = true
+  config.autoload_paths = ["#{config.root}/lib/**/"] + config.autoload_paths
+  config.eager_load_paths = ["#{config.root}/lib/**/"] + config.eager_load_paths
+#  puts config.eager_load_paths.inspect
 end

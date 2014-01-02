@@ -122,6 +122,7 @@ class Movie < ActiveRecord::Base
     return nil if !defined?(TMDB_API_KEY)
     @tmdb ||= MovieExternal::TMDb.new(self)
   end
+
   def bing
     @bing ||= MovieExternal::Bing.new(self)
   end
@@ -164,7 +165,7 @@ class Movie < ActiveRecord::Base
     image_url
   end
 
-  def imdb_search_title
+  def imdb_search_text
     if title_category == "TVS"
       if episode_name
         return "#{title} \"#{episode_name}\""
