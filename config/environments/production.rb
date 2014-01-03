@@ -77,4 +77,5 @@ Nmdb3Api3::Application.configure do
 
   # Use default logging formatter so that PID and timestamp are not suppressed.
   config.log_formatter = ::Logger::Formatter.new
+  config.eager_load_paths = ["#{config.root}/lib/**/"] + config.eager_load_paths
 end
