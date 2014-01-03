@@ -122,9 +122,20 @@ class MoviesController < ApplicationController
     }.compact
   end
 
+  def local_connections
+    @local = true
+    common_connections
+  end
+
   def connections
+    @local = true
+    common_connections
+    sleep 10
+  end
+
+  def common_connections
     @movie = Movie.find(params[:id])
-    groups = MovieConnection.scan_imdb_connections(@movie).group_by(&:movie_connection_type_id)
+    groups = MovieConnection.scan_imdb_connections(@movie, local_only: @local).group_by(&:movie_connection_type_id)
     types = groups.keys.sort_by { |x| groups[x].first.type_sort_value }.map do |group|
       {
         type: groups[group].first.type,

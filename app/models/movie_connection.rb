@@ -23,20 +23,21 @@ class MovieConnection < ActiveRecord::Base
              }.compact)
   end
 
-  def self.scan_imdb_connections(movie)
+  def self.scan_imdb_connections(movie, options = { })
+    options = { local_only: false }.merge(options)
     mcs = movie.movie_connections
-    return mcs if mcs.blank?
+    return mcs if mcs.blank? || options[:local_only]
     texts = MovieConnectionText.fetch(movie.id)
     return mcs if mcs.count == (texts || {}).keys.count
 
     imdb_data = movie.imdb.movie_connection_data
-    scanned_ids = []
+    skip_ids = []
     mcs.each do |mc|
       next if mc.text
       imdb_linked_movie = imdb_data[mc.type].select do |x|
-        next if scanned_ids.include?(mc.linked_movie_id) && !mc.linked_movie.imdb_id
+        next if skip_ids.include?(mc.linked_movie_id)
         linked_imdbid = mc.linked_movie.imdb.imdbid
-        scanned_ids << mc.linked_movie_id
+        skip_ids << mc.linked_movie_id if !mc.linked_movie.imdb_id
         x[:imdbid] == linked_imdbid
       end.first
       next if !imdb_linked_movie

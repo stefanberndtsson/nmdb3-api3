@@ -41,6 +41,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'cover'
       get 'images'
       get 'episodes'
+      get 'local_connections'
       get 'connections'
     end
   end
