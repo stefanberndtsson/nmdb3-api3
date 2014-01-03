@@ -128,9 +128,8 @@ class MoviesController < ApplicationController
   end
 
   def connections
-    @local = true
+    @local = false
     common_connections
-    sleep 10
   end
 
   def common_connections
