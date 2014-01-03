@@ -43,7 +43,7 @@ module Externals
           tmp_imdbid = find_one.first[/^http:\/\/www.imdb.com\/#{@section}\/(#{@id_prefix}\d+)\/$/,1]
         else
           find_same = results["items"].map do |item|
-            tmp = item["link"][/^http:\/\/www.imdb.com\/#{section}\/(#{@id_prefix}\d+)\/.*$/,1]
+            tmp = item["link"][/^http:\/\/www.imdb.com\/#{@section}\/(#{@id_prefix}\d+)\/.*$/,1]
             next false if !tmp
             tmp
           end.uniq
