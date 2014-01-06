@@ -43,6 +43,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'episodes'
       get 'local_connections'
       get 'connections'
+      get 'additionals'
     end
   end
 

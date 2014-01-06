@@ -17,6 +17,7 @@ class Movie < ActiveRecord::Base
   has_many :quotes
   has_many :release_dates
   has_many :movie_connections, -> { includes([:movie_connection_type, :linked_movie]) }
+  has_many :movie_akas
   has_one :rating
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
@@ -113,7 +114,13 @@ class Movie < ActiveRecord::Base
     pages << :images if has_images?
     pages << :episodes if episodes.count > 0
     pages << :connections if movie_connections.count > 0
+    pages << :additionals if has_additionals?
     pages
+  end
+
+  def has_additionals?
+    return true if movie_akas.count > 0
+    false
   end
 
   def has_images?

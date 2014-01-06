@@ -146,4 +146,11 @@ class MoviesController < ApplicationController
     end
     render json: types
   end
+
+  def additionals
+    @movie = Movie.find(params[:id])
+    render json: {
+      akas: @movie.movie_akas
+    }
+  end
 end

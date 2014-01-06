@@ -160,6 +160,7 @@ class Solr
                params: {
                      q: query,
                      fq: "class:#{@classname}",
+                     qf: "movie_title^10000 alternate_title^1000 person_name^5000 movie_secondary^500 person_secondary^50 cast^1 character^1 movies^1",
                      rows: options[:limit],
                      fl: 'id,nmdb_id,score,class'+(@raw_data ? ",*" : ""),
                      boost: boost,
