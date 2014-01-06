@@ -107,6 +107,7 @@ class MoviesController < ApplicationController
       seasons << episode.episode_season || "Unknown"
       {
         episode: episode,
+        episode_name: episode.episode_name.blank? ? "Unnamed" : episode.episode_name,
         plot: episode.plots.sort_by { |x| -x.plot_norm.size}.first,
         release_date: episode.first_release_date
       }.compact
@@ -114,6 +115,7 @@ class MoviesController < ApplicationController
     seasons = seasons.uniq.map do |season|
       {
         season: season,
+        season_name: season.blank? ? "Unknown" : season,
         episodes: episodes[season]
       }
     end
