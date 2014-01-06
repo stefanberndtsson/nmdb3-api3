@@ -17,6 +17,7 @@ class Movie < ActiveRecord::Base
   has_many :quotes
   has_many :release_dates
   has_many :movie_connections, -> { includes([:movie_connection_type, :linked_movie]) }
+  has_one :rating
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
   attr_accessor :fetch_full
@@ -74,6 +75,13 @@ class Movie < ActiveRecord::Base
       json_hash[:next_followed] = next_followed.short_data if next_f
       json_hash[:prev_followed] = prev_followed.short_data if prev_f
       json_hash[:is_linked] = true if next_f || prev_f
+    end
+    if fetch_full && rating
+      json_hash[:rating] = {
+        rating: rating.rating,
+        votes: rating.votes,
+        distribution: rating.distribution
+      }
     end
     json_hash.delete("title_category")
     json_hash.delete("episode_sort_value")
