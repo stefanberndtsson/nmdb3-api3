@@ -9,6 +9,7 @@ module Externals
     def search
       topic_id = Rails.rcache.get("#{cache_prefix}:topic:id")
       return topic_id if topic_id
+      return nil if !@query_string
       res = FreebaseAPI::Topic.search(@query_string, filter: "(all type:#{@search_type})")
       @query ||= res.first ? res.first.last.id : nil
       Rails.rcache.set("#{cache_prefix}:topic:id", @query, 1.week) if @query
