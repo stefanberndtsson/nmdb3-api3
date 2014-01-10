@@ -59,8 +59,9 @@ class MoviesController < ApplicationController
   end
 
   def quotes
+    mode = params[:mode] == "full" ? :full : nil
     @quotes = Quote.where(movie_id: params[:id]).order(:sort_order)
-    render json: @quotes
+    render json: @quotes.to_json(mode: mode)
   end
 
   def externals

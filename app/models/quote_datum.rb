@@ -23,6 +23,15 @@ class QuoteDatum < ActiveRecord::Base
     }.compact
   end
 
+  def quote_line_fast
+    {
+      content: content,
+      quoter: quoter.blank? ? nil : {
+        character: quoter
+      }.compact
+    }.compact
+  end
+
   def content
     @content ||= quoter.blank? ? value : value[quoter.size+1..-1].gsub(/^\s+/,'')
   end
