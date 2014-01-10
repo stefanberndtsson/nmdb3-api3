@@ -84,6 +84,9 @@ class Movie < ActiveRecord::Base
         distribution: rating.distribution
       }
     end
+    if fetch_full && release_dates
+      json_hash[:first_release_date] = first_release_date
+    end
     json_hash.delete("title_category")
     json_hash.delete("episode_sort_value")
     json_hash.compact
