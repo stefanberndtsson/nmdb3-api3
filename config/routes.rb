@@ -31,6 +31,7 @@ Nmdb3Api3::Application.routes.draw do
   resources :movies do
     member do
       get 'genres'
+      get 'languages'
       get 'keywords'
       get 'cast_members'
       get 'plots'

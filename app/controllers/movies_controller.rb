@@ -22,6 +22,11 @@ class MoviesController < ApplicationController
     render json: @genres
   end
 
+  def languages
+    @languages = Language.joins(:movie_languages).where(movie_languages: { movie_id: params[:id]})
+    render json: @languages
+  end
+
   def keywords
     movie = Movie.find(params[:id])
     keywords = Keyword.joins(:movie_keyword).where(movie_keywords: { movie_id: params[:id]})
