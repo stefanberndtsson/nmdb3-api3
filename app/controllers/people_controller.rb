@@ -53,10 +53,12 @@ class PeopleController < ApplicationController
     @imdbid = @person.imdb.imdbid
     @wikipedia = @person.freebase.wikipedia_pages
     @freebase_topic = @person.freebase.search
+    @twitter_name = @person.freebase.twitter_name
     render json: {
       imdb_id: @imdbid,
       freebase_topic: @freebase_topic,
       wikipedia: @wikipedia.compact,
+      twitter: @twitter_name.blank? ? nil : @twitter_name
     }.compact
   end
 

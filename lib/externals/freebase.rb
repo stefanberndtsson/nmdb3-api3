@@ -53,6 +53,22 @@ module Externals
       titles
     end
 
+    def twitter_name
+      cached_twitter_name = Rails.rcache.get("#{cache_prefix}:twitter:name")
+      return cached_twitter_name if cached_twitter_name
+      return nil if !topic
+      twitter_entry = topic.property('/type/object/key').select { |x| x.value[/^\/authority\/twitter\/(.*)/] }.first
+
+      if !twitter_entry
+        Rails.rcache.set("#{cache_prefix}:twitter:name", nil, 1.week)
+        return nil
+      end
+
+      twitter_name = twitter_entry.value[/^\/authority\/twitter\/(.*)/,1]
+      Rails.rcache.set("#{cache_prefix}:twitter:name", twitter_name, 1.week)
+      twitter_name
+    end
+
     def decode_string(str)
       str.gsub(/\$([0-9A-F]{4})/) { [$1.hex].pack("U") }
     end
