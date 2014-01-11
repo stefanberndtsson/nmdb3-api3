@@ -44,6 +44,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'local_connections'
       get 'connections'
       get 'additionals'
+      get 'similar'
     end
   end
 

@@ -154,4 +154,9 @@ class MoviesController < ApplicationController
       akas: @movie.movie_akas
     }
   end
+
+  def similar
+    @movie = Movie.find(params[:id])
+    render json: @movie.find_similar
+  end
 end

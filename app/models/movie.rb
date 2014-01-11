@@ -5,6 +5,8 @@ class Movie < ActiveRecord::Base
   has_many :genres, :through => :movie_genres
   has_many :movie_keywords
   has_many :keywords, :through => :movie_keywords
+  has_many :movie_languages
+  has_many :languages, :through => :movie_languages
   has_many :movie_years
   has_many :episodes, -> {
     includes([:plots, :release_dates])
@@ -22,6 +24,7 @@ class Movie < ActiveRecord::Base
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
   attr_accessor :fetch_full
+  attr_accessor :fetch_extra
 
   def first_release_date
     release_dates.sort_by(&:release_stamp).first
@@ -63,28 +66,28 @@ class Movie < ActiveRecord::Base
                category: category,
                score: @score,
              })
-    if fetch_full && Rails.rcache.get(cover_image_cache_key)
+    if (fetch_full || (fetch_extra && fetch_extra[:cover])) && Rails.rcache.get(cover_image_cache_key)
       json_hash[:image_url] = cover_image
     end
-    if fetch_full && is_episode
+    if (fetch_full || (fetch_extra && fetch_extra[:episode_links])) && is_episode
       json_hash[:prev_episode] = prev_episode.short_data if prev_episode
       json_hash[:next_episode] = next_episode.short_data if next_episode
     end
-    if fetch_full
+    if (fetch_full || (fetch_extra && fetch_extra[:movie_links]))
       next_f = next_followed
       prev_f = prev_followed
       json_hash[:next_followed] = next_followed.short_data if next_f
       json_hash[:prev_followed] = prev_followed.short_data if prev_f
       json_hash[:is_linked] = true if next_f || prev_f
     end
-    if fetch_full && rating
+    if (fetch_full || (fetch_extra && fetch_extra[:rating])) && rating
       json_hash[:rating] = {
         rating: rating.rating,
         votes: rating.votes,
         distribution: rating.distribution
       }
     end
-    if fetch_full && release_dates
+    if (fetch_full || (fetch_extra && fetch_extra[:first_release_date])) && release_dates
       json_hash[:first_release_date] = first_release_date
     end
     json_hash.delete("title_category")
@@ -118,6 +121,7 @@ class Movie < ActiveRecord::Base
     pages << :episodes if episodes.count > 0
     pages << :connections if movie_connections.count > 0
     pages << :additionals if has_additionals?
+    pages << :similar if has_similar?
     pages
   end
 
@@ -259,5 +263,80 @@ class Movie < ActiveRecord::Base
     selected.sort_by do |x|
       [-(x.linked_movie.title_year == "????" ? 99999 : x.linked_movie.title_year.to_i), -(x.linked_movie.movie_sort_value || 0)]
     end.first.linked_movie
+  end
+
+  # Similar
+  def has_similar?
+    Movie.select("movie_id").from("compare_overlaps").where("movie_id = ?", self.id).count != 0
+  end
+
+  def find_similar(result_count = 30)
+    lc = "co.language_overlap_count::float"
+    gc = "co.genre_overlap_count::float"
+    knn = "co.normal_normal_count::float"
+    kns = "co.normal_strong_count::float"
+    ksn = "co.strong_normal_count::float"
+    kss = "co.strong_strong_count::float"
+    cmy = "convert_to_integer(m.title_year)::float"
+    selfgc = genre_ids.count.to_f
+    selfkc = keyword_ids.count.to_f
+    selflc = language_ids.count.to_f
+    selfskc = strong_keywords.count.to_f
+    selfyear = title_year.to_i
+
+    nnw = 1.0
+    nsw = 2.0
+    snw = 3.0
+    ssw = 4.0
+    gcw = 0.3
+    lcw = 0.1
+    yrw = 0.01
+
+    score_kwnn = selfkc == 0 ? "" : "(#{nnw}*#{knn}/#{selfkc})"
+    score_kwns = selfkc == 0 ? "" : "(#{nsw}*#{kns}/#{selfkc})"
+    score_kwsn = selfskc == 0 ? "" : "(#{snw}*#{ksn}/#{selfskc})"
+    score_kwss = selfskc == 0 ? "" : "(#{ssw}*#{kss}/#{selfskc})"
+    score_genre = selfgc == 0 ? "" : "(#{gcw}*#{gc}/#{selfgc})"
+    score_lang = selflc == 0 ? "" : "(#{lcw}*#{lc}/#{selflc})"
+    score_divisor = nnw+nsw+snw+ssw+gcw+lcw
+    score_year = "(1+(ABS(#{cmy}-#{selfyear})*#{yrw}))"
+
+    score_expr_top = ([score_kwnn, score_kwns, score_kwsn,
+                       score_kwss, score_genre, score_lang]-[""]).join("+")
+    score_expr_middle = score_divisor
+    score_expr_bottom = score_year
+
+#    score_expr_top = "((1+#{lc}/10) * (1+#{gc}/5) * (#{knn}+2*#{kns}+2*#{ksn}+3*#{kss}))"
+#    score_expr_middle = ((1+selflc/10.0)*(1+selfgc/5.0)*(selfkc))
+#    score_expr_bottom = "(1+(ABS(#{cmy}-#{selfyear})/50.0))"
+    score_expr = "(#{score_expr_top})/(#{score_expr_middle})/(#{score_expr_bottom})"
+#    STDERR.puts(score_expr)
+    query = "SELECT co.compare_movie_id AS id, #{score_expr} AS score_value"+
+                                " FROM compare_overlaps co"+
+                                " INNER JOIN movies m"+
+                                "  ON co.compare_movie_id = m.id"+
+                                " WHERE movie_id = #{self.id}"+
+                                " ORDER BY 2 DESC"+
+                                " LIMIT #{result_count}"
+    movies = Movie.find_by_sql(query)
+
+    movie_list = { }
+    Movie.find_all_by_id(movies.map(&:id), :include => :rating).each do |movie|
+      movie_list[movie.id.to_i] = movie
+    end
+
+    return (movies.map do |item|
+              movie = movie_list[item.id.to_i]
+              next if movie.nil?
+              movie.fetch_extra = { rating: true }
+              score = item.score_value.to_f
+              score *= 100.0
+              score = 100.0 if score > 100.0
+              score = 15 if score <= 0.01
+              {
+                movie: movie,
+                similarity: sprintf("%3.1f%", score)
+              }
+    end - [nil])
   end
 end
