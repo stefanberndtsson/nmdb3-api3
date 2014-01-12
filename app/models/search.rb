@@ -201,8 +201,7 @@ class Solr
   end
 
   def boost
-    # @@boost ||= Infix.new(sort_expr).to_postfix.to_solr
-    Infix.new(sort_expr).to_postfix.to_solr
+    @@boost ||= Infix.new(sort_expr).to_postfix.to_solr
   end
 
   def sort_expr
