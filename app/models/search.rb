@@ -212,7 +212,7 @@ class Solr
     occ = "50*occupation_score"
     scores = "(#{link_occ})+(#{link})+(#{occ})"
     votes = "votes/5"
-    award = "100000*(category_award_value*20*award_keyword+reduce_genre*2000)"
+    award = "300000*(category_award_value*20*award_keyword+reduce_genre*2000)"
 
     "((#{episode})+(#{scores})+(#{votes})-(#{award}))/100"
   end
