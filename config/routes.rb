@@ -5,6 +5,8 @@ Nmdb3Api3::Application.routes.draw do
       get 'people'
       get 'solr_movies'
       get 'solr_people'
+      get 'solr_suggest_movies'
+      get 'solr_suggest_people'
     end
   end
 

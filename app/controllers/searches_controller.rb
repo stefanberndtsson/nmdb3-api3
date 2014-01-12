@@ -84,4 +84,36 @@ class SearchesController < ApplicationController
     @people = Search.solr_query_people(query, options)
     render json: @people
   end
+
+  def solr_suggest_movies
+    query = params[:query]
+    if !query
+      render json: {
+        error: "No query"
+      }
+      return
+    end
+
+    options = {}
+    options[:limit] = params[:limit] if params[:limit]
+    wildcard_query = query.split(/ +/).map { |x| x+'*' }.join(" ")
+    @movies = Search.solr_suggest_movies(wildcard_query, options)
+    render json: @movies
+  end
+
+  def solr_suggest_people
+    query = params[:query]
+    if !query
+      render json: {
+        error: "No query"
+      }
+      return
+    end
+
+    options = {}
+    options[:limit] = params[:limit] if params[:limit]
+    wildcard_query = query.split(/ +/).map { |x| x+'*' }.join(" ")
+    @people = Search.solr_suggest_people(wildcard_query, options)
+    render json: @people
+  end
 end

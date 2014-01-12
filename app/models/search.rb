@@ -29,6 +29,18 @@ class Search < ActiveRecord::Base
     people = Solr.new("person")
     people.query(query, options)
   end
+
+  def self.solr_suggest_movies(query, options = {})
+    query = query.norm
+    movies = Solr.new("movie", :suggest)
+    movies.query(query, options)
+  end
+
+  def self.solr_suggest_people(query, options = {})
+    query = query.norm
+    people = Solr.new("person", :suggest)
+    people.query(query, options)
+  end
 end
 
 class Sphinx
@@ -147,20 +159,32 @@ class Solr
     "movie" => "Movie",
     "person" => "Person"
   }
-  def initialize(classname, raw_data = false)
+  CORES={
+    default: "core0",
+    suggest: "core1"
+  }
+  SUGGEST_FIELDS={
+    "movie" => "movie_title^10000 alternate_title^1000 episode_name^1",
+    "person" => "person_name^5000 person_secondary^50"
+  }
+
+  def initialize(classname, section = :default, raw_data = false)
     @classname = classname
     @source_class = SOURCE_CLASSES[@classname]
     @raw_data = raw_data
+    @section = section
   end
 
   def query(query, options = {})
     default_options = { limit: 20 }
     options = default_options.merge(options)
+    fields = "movie_title^10000 alternate_title^1000 person_name^5000 movie_secondary^500 person_secondary^50 cast^1 character^1 movies^1 episode_name^1"
+    fields = SUGGEST_FIELDS[@classname] if @section == :suggest
     res = solr.get('select',
                params: {
                      q: query,
                      fq: "class:#{@classname}",
-                     qf: "movie_title^10000 alternate_title^1000 person_name^5000 movie_secondary^500 person_secondary^50 cast^1 character^1 movies^1 episode_name^1",
+                     qf: fields,
                      rows: options[:limit],
                      fl: 'id,nmdb_id,score,class'+(@raw_data ? ",*" : ""),
                      boost: boost,
@@ -177,14 +201,15 @@ class Solr
   end
 
   def boost
-    @@boost ||= Infix.new(sort_expr).to_postfix.to_solr
+    # @@boost ||= Infix.new(sort_expr).to_postfix.to_solr
+    Infix.new(sort_expr).to_postfix.to_solr
   end
 
   def sort_expr
     # div(sub(add(add(product(100000,sub(1,is_episode)),add(div(product(product(3,link_score),occupation_score),30),product(3,div(link_score,add(movie_count,0.001))))),add(product(50,occupation_score),div(votes,5))),product(100000, product(product(category_award_value,1),product(20,award_keyword)))),100)
-    episode = "100000*(1-is_episode)"
-    link_occ = "(3*link_score*occupation_score)/30"
-    link = "3*(link_score/(movie_count+0.001))"
+    episode = "10000*(1-is_episode)-100000*(is_episode)"
+    link_occ = "(5000*link_score*occupation_score)/30"
+    link = "5*(link_score/(movie_count+0.001))"
     occ = "50*occupation_score"
     scores = "(#{link_occ})+(#{link})+(#{occ})"
     votes = "votes/5"
@@ -195,7 +220,8 @@ class Solr
 
   def solr
     config = Rails.configuration.database_configuration[Rails.env]
-    @@rsolr ||= RSolr.connect(url: "http://#{config["host"]}:8080/solr/core0/")
+    @@rsolr ||= { }
+    @@rsolr[@section] ||= RSolr.connect(url: "http://#{config["host"]}:8080/solr/#{CORES[@section]}/")
   end
 
   def doc_objects(doc_ids)
