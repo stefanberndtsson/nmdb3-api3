@@ -8,11 +8,26 @@ module Externals
       setup
     end
 
-    def search_rss
+    #  if ((document.cookie.length>0) && (sj_cook.get("_FP", "BDCE") == null)) { sj_cook.set("_FP", "BDCE", "130341164948353394", 1, "/"); sj_cook.set("_FP", "BDCEH", "C16BE41EB639936DF35F53748FD77947", 1, "/");
+    def search_rss(cookies = nil)
       query_string = @obj.imdb_search_text
-      query = URI.encode_www_form_component("\"#{query_string}\" #{@extra_query} site:www.imdb.com/#{@section}")
-      open(BASEURL+query) do |u|
+      query = URI.encode_www_form_component("+intitle:\"#{query_string}\" #{@extra_query} site:www.imdb.com/#{@section}")
+      headers = { }
+      if !cookies && Rails.rcache.get("#{cache_prefix}:bing:cookies")
+        cookies = Rails.rcache.get("#{cache_prefix}:bing:cookies")
+      end
+      headers["Cookie"] = cookies if cookies
+      open(BASEURL+query, headers) do |u|
         rssdata = u.read
+        if !cookies && rssdata[/sj_cook.set\("_FP", "BDCE", "([^"]+)", .*sj_cook.set\("_FP", "BDCEH", "([^"]+)", /]
+          cookies = ["_FP=BDCE="+$1, "BDCEH="+$2].join("&")
+          expire = (Time.now+2.years).strftime("%a, %d-%b-%Y %H:%M:%S GMT")
+          recvd_cookies = u.meta['set-cookie'].split(/path=\/, /).map { |x| x.split(/;/).first }
+          recvd_cookies << cookies
+          cookies = recvd_cookies.join("; ")
+          Rails.rcache.set("#{cache_prefix}:bing:cookies", cookies, 1.week)
+          return search_rss(recvd_cookies.join("; "))
+        end
         doc = Nokogiri::XML(rssdata)
         results = {}
         results["items"] = []
