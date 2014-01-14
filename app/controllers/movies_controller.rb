@@ -172,10 +172,28 @@ class MoviesController < ApplicationController
     @movies.each do |movie|
       movie.fetch_extra = { display_title: true }
       movie.freebase.topic_name
+      n_movie = movie.next_followed
+      p_movie = movie.prev_followed
       new_titled_movies[movie.id] = {
         display_full_title: movie.display_full_title,
         display_title: movie.display_title
       }
+      if n_movie
+        n_movie.fetch_extra = { display_title: true }
+        n_movie.freebase.topic_name
+        new_titled_movies[movie.id][:next_followed] = {
+          display_full_title: n_movie.display_full_title,
+          display_title: n_movie.display_title,
+        }
+      end
+      if p_movie
+        p_movie.fetch_extra = { display_title: true }
+        p_movie.freebase.topic_name
+        new_titled_movies[movie.id][:prev_followed] = {
+          display_full_title: p_movie.display_full_title,
+          display_title: p_movie.display_title,
+        }
+      end
     end
 
     render json: params[:id] ? new_titled_movies.values.first : new_titled_movies

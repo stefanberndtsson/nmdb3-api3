@@ -256,4 +256,10 @@ class Person < ActiveRecord::Base
       }.compact
     end.compact
   end
+
+  def clear_all_caches
+    Rails.rcache.keys("person:#{self.id}:*").each do |key|
+      Rails.rcache.del(key)
+    end
+  end
 end

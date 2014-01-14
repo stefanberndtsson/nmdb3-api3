@@ -401,4 +401,10 @@ class Movie < ActiveRecord::Base
               }
     end - [nil])
   end
+
+  def clear_all_caches
+    Rails.rcache.keys("movie:#{self.id}:*").each do |key|
+      Rails.rcache.del(key)
+    end
+  end
 end
