@@ -60,6 +60,9 @@ class Movie < ActiveRecord::Base
     if extra?(:display_title) && freebase.topic_name(true)
       @display_title_fresh = true
       new_title = (is_tvseries? ? "\"#{freebase.topic_name}\"" : freebase.topic_name) + " (#{title_year})"
+      if title_category
+        new_title += " (#{title_category})"
+      end
       Rails.rcache.set("movie:#{self.id}:extra:display_full_title", new_title, 1.week)
       return new_title
     end
