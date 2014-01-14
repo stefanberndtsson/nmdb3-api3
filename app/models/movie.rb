@@ -59,7 +59,7 @@ class Movie < ActiveRecord::Base
     # Check if we have a stored name from freebase, use if so...
     if extra?(:display_title) && freebase.topic_name(true)
       @display_title_fresh = true
-      new_title = freebase.topic_name + " (#{title_year})"
+      new_title = (is_tvseries? ? "\"#{freebase.topic_name}\"" : freebase.topic_name) + " (#{title_year})"
       Rails.rcache.set("movie:#{self.id}:extra:display_full_title", new_title, 1.week)
       return new_title
     end
@@ -82,7 +82,7 @@ class Movie < ActiveRecord::Base
     end
     # Check if we have a stored name from freebase, use if so...
     if extra?(:display_title) && freebase.topic_name(true)
-      new_title = freebase.topic_name
+      new_title = (is_tvseries? ? "\"#{freebase.topic_name}\"" : freebase.topic_name)
       @display_title_fresh = true
       Rails.rcache.set("movie:#{self.id}:extra:display_title", new_title, 1.week)
       return new_title
@@ -91,8 +91,12 @@ class Movie < ActiveRecord::Base
     title
   end
 
+  def is_tvseries?
+    title_category == "TVS"
+  end
+
   def can_have_episodes?
-    title_category == "TVS" && !is_episode
+    is_tvseries? && !is_episode
   end
 
   def cast
