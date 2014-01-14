@@ -25,13 +25,70 @@ class Movie < ActiveRecord::Base
   attr_accessor :score
   attr_accessor :fetch_full
   attr_accessor :fetch_extra
+  attr_accessor :display_title_fresh
 
-  def first_release_date
-    release_dates.sort_by(&:release_stamp).first
+  def extra?(key)
+    fetch_full || (fetch_extra && fetch_extra[key])
   end
 
-  def display
+  def first_release_date
+    @first_release_date ||= release_dates.sort_by(&:release_stamp).first
+  end
+
+  def is_swedish?
+    if(languages.include?(Language.lang_id("Swedish")) &&
+        first_release_date && ["Sweden", "Denmark", "Norway"].include?(first_release_date.country))
+      return true
+    end
+    return false
+  end
+
+  def display_full_title
+    # First check our cache for entry
+    cached_title = Rails.rcache.get("movie:#{self.id}:extra:display_full_title")
+    if cached_title
+      @display_title_fresh = true
+      return cached_title
+    end
+    # Special handling of original title for scandinavian titles
+    if extra?(:display_title) && is_swedish?
+      @display_title_fresh = true
+      Rails.rcache.set("movie:#{self.id}:extra:display_full_title", full_title, 1.week)
+      return full_title
+    end
+    # Check if we have a stored name from freebase, use if so...
+    if extra?(:display_title) && freebase.topic_name(true)
+      @display_title_fresh = true
+      new_title = freebase.topic_name + " (#{title_year})"
+      Rails.rcache.set("movie:#{self.id}:extra:display_full_title", new_title, 1.week)
+      return new_title
+    end
+    # Return plain title if we have none of the above
     full_title
+  end
+
+  def display_title
+    # First check our cache for entry
+    cached_title = Rails.rcache.get("movie:#{self.id}:extra:display_title")
+    if cached_title
+      @display_title_fresh = true
+      return cached_title
+    end
+    # Special handling of original title for scandinavian titles if we're fetching display_title
+    if extra?(:display_title) && is_swedish?
+      Rails.rcache.set("movie:#{self.id}:extra:display_title", title, 1.week)
+      @display_title_fresh = true
+      return title
+    end
+    # Check if we have a stored name from freebase, use if so...
+    if extra?(:display_title) && freebase.topic_name(true)
+      new_title = freebase.topic_name
+      @display_title_fresh = true
+      Rails.rcache.set("movie:#{self.id}:extra:display_title", new_title, 1.week)
+      return new_title
+    end
+    # Return plain title if we have none of the above
+    title
   end
 
   def can_have_episodes?
@@ -62,32 +119,35 @@ class Movie < ActiveRecord::Base
   def as_json(options = {})
     json_hash = super(options)
       .merge({
+               display_title: display_title,
+               display_full_title: display_full_title,
+               display_title_fresh: @display_title_fresh,
                category_code: category_code,
                category: category,
                score: @score,
              })
-    if (fetch_full || (fetch_extra && fetch_extra[:cover])) && Rails.rcache.get(cover_image_cache_key)
+    if extra?(:cover) && Rails.rcache.get(cover_image_cache_key)
       json_hash[:image_url] = cover_image
     end
-    if (fetch_full || (fetch_extra && fetch_extra[:episode_links])) && is_episode
+    if extra?(:episode_links) && is_episode
       json_hash[:prev_episode] = prev_episode.short_data if prev_episode
       json_hash[:next_episode] = next_episode.short_data if next_episode
     end
-    if (fetch_full || (fetch_extra && fetch_extra[:movie_links]))
+    if extra?(:movie_links)
       next_f = next_followed
       prev_f = prev_followed
       json_hash[:next_followed] = next_followed.short_data if next_f
       json_hash[:prev_followed] = prev_followed.short_data if prev_f
       json_hash[:is_linked] = true if next_f || prev_f
     end
-    if (fetch_full || (fetch_extra && fetch_extra[:rating])) && rating
+    if extra?(:rating) && rating
       json_hash[:rating] = {
         rating: rating.rating,
         votes: rating.votes,
         distribution: rating.distribution
       }
     end
-    if (fetch_full || (fetch_extra && fetch_extra[:first_release_date])) && release_dates
+    if extra?(:first_release_date) && release_dates
       json_hash[:first_release_date] = first_release_date
     end
     json_hash.delete("title_category")
@@ -228,6 +288,8 @@ class Movie < ActiveRecord::Base
       id: id,
       full_title: full_title,
       title: title,
+      display_title: display_title,
+      display_full_title: display_full_title,
       parent_id: parent_id,
       title_year: title_year,
       episode_season: episode_season,

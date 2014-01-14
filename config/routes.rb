@@ -48,6 +48,10 @@ Nmdb3Api3::Application.routes.draw do
       get 'connections'
       get 'additionals'
       get 'similar'
+      get 'new_title'
+    end
+    collection do
+      get 'new_title'
     end
   end
 

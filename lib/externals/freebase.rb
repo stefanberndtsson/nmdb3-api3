@@ -76,5 +76,16 @@ module Externals
     def cache_prefix
       "#{@objclass}:#{@obj.id}:externals:freebase"
     end
+
+    def topic_name(cache_only = false)
+      cached_name = Rails.rcache.get("#{cache_prefix}:topic_name")
+      return cached_name if cached_name
+      return nil if cache_only
+      return nil if !topic
+      name_obj = topic.property('/type/object/name').first
+      return nil if !name_obj
+      Rails.rcache.set("#{cache_prefix}:topic_name", name_obj.value, 1.week)
+      name_obj.value
+    end
   end
 end

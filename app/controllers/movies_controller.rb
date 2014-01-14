@@ -164,4 +164,20 @@ class MoviesController < ApplicationController
     @movie = Movie.find(params[:id])
     render json: @movie.find_similar
   end
+
+  def new_title
+    ids = params[:id] ? [params[:id]] : params[:ids].split(",")
+    @movies = Movie.find(ids)
+    new_titled_movies = { }
+    @movies.each do |movie|
+      movie.fetch_extra = { display_title: true }
+      movie.freebase.topic_name
+      new_titled_movies[movie.id] = {
+        display_full_title: movie.display_full_title,
+        display_title: movie.display_title
+      }
+    end
+
+    render json: params[:id] ? new_titled_movies.values.first : new_titled_movies
+  end
 end
