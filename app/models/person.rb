@@ -238,7 +238,7 @@ class Person < ActiveRecord::Base
 #    if name_count
 #      search_name += " (#{name_count})"
 #    end
-    "+intitle:\"search_name\""
+    "+intitle:\"#{search_name}\""
   end
 
   def top_movies
