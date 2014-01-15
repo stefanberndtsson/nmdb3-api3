@@ -91,7 +91,7 @@ class MovieExternal
   class Bing < Externals::Bing
     def setup
       @objclass = "movie"
-      @extra_query = "\"Full Cast & Crew\""
+      @extra_query = ""
       @section = "title"
       @id_prefix = "tt"
     end
