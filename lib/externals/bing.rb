@@ -11,7 +11,7 @@ module Externals
     #  if ((document.cookie.length>0) && (sj_cook.get("_FP", "BDCE") == null)) { sj_cook.set("_FP", "BDCE", "130341164948353394", 1, "/"); sj_cook.set("_FP", "BDCEH", "C16BE41EB639936DF35F53748FD77947", 1, "/");
     def search_rss(cookies = nil)
       query_string = @obj.imdb_search_text
-      query = URI.encode_www_form_component("+intitle:\"#{query_string}\" #{@extra_query} site:www.imdb.com/#{@section}")
+      query = URI.encode_www_form_component("#{query_string} #{@extra_query} site:www.imdb.com/#{@section}")
       headers = { }
       if !cookies && Rails.rcache.get("#{cache_prefix}:bing:cookies")
         cookies = Rails.rcache.get("#{cache_prefix}:bing:cookies")

@@ -257,21 +257,21 @@ class Movie < ActiveRecord::Base
   def imdb_search_text
     if title_category == "TVS"
       if episode_name
-        return "#{title} \"#{episode_name}\""
+        return "\"#{title} \"#{episode_name}\"\""
       else
-        return full_title.gsub(/^"(.*)" \(/, '\1 (')
+        return "\"#{full_title.gsub(/^"(.*)" \(/, '\1 (')}\""
       end
     end
     if title_category == "VG"
-      return full_title
+      return "+intitle:\"#{full_title}\""
     end
     if title_category
       cpos = full_title.rindex("(#{title_category})")
       if cpos
-        return full_title[0..cpos-2]
+        return "+intitle:\"#{full_title[0..cpos-2]}\""
       end
     end
-    return full_title
+    return "+intitle:\"#{full_title}\""
   end
 
   # Episode
