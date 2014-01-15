@@ -156,7 +156,12 @@ class MoviesController < ApplicationController
   def additionals
     @movie = Movie.find(params[:id])
     render json: {
-      akas: @movie.movie_akas
+      original_title: @movie.full_title,
+      akas: @movie.movie_akas,
+      languages: @movie.languages,
+      producers: @movie.crew_by_role("producer"),
+      directors: @movie.crew_by_role("director"),
+      writers: @movie.crew_by_role("writer"),
     }
   end
 

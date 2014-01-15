@@ -119,6 +119,24 @@ class Movie < ActiveRecord::Base
     end
   end
 
+  def crew_by_role(role)
+    role = Role.where(role: role).first
+    return [] if !role
+    crew = occupations.where(role_id: role.id).includes(:person)
+    crew.map do |member|
+      crew_data(member)
+    end.compact
+  end
+
+  def crew_data(member)
+    {
+      id: member.person.id,
+      name: member.person.display,
+      extras: member.extras,
+      sort_value: member.sort_value
+    }.compact
+  end
+
   def strong_keywords
     Keyword.strong_keywords(self)
   end
