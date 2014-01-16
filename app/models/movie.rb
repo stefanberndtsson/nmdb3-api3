@@ -152,8 +152,9 @@ class Movie < ActiveRecord::Base
                category: category,
                score: @score,
              })
-    if extra?(:cover) && Rails.rcache.get(cover_image_cache_key)
-      json_hash[:image_url] = Rails.rcache.get(cover_image_cache_key)
+    cached_cover = Rails.rcache.get(cover_image_cache_key)
+    if extra?(:cover) && cached_cover && cached_cover != ""
+      json_hash[:image_url] = cached_cover
       if Rails.rcache.get("#{cover_image_cache_key}:expire").to_i < Time.now.to_i
         json_hash[:image_url_expired] = true
       end
