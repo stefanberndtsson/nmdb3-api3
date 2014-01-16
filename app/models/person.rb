@@ -178,7 +178,10 @@ class Person < ActiveRecord::Base
                score: @score
              }).compact
     if Rails.rcache.get(cover_image_cache_key)
-      json_hash[:image_url] = cover_image
+      json_hash[:image_url] = Rails.rcache.get(cover_image_cache_key)
+      if Rails.rcache.get("#{cover_image_cache_key}:expire").to_i < Time.now.to_i
+        json_hash[:image_url_expired] = true
+      end
     end
     json_hash
   end
@@ -211,25 +214,33 @@ class Person < ActiveRecord::Base
     @wikipedia[lang] ||= PersonExternal::Wikipedia.new(self, wpages[lang], lang)
   end
 
-  def cover_image_cache_key(size = 640)
+  def cover_image_cache_key
     "person:#{self.id}:externals:wikipedia:cover"
   end
 
-  def cover_image(size = 640)
-    image_url = Rails.rcache.get("person:#{self.id}:externals:wikipedia:cover")
-    if image_url && image_url != ""
-      return image_url
+  def cover_image_set_cache(image_url, expire = 1.month)
+    expire = 1.day if !image_url
+    Rails.rcache.set(cover_image_cache_key, image_url)
+    Rails.rcache.set("#{cover_image_cache_key}:expire", (Time.now + expire).to_i)
+  end
+
+  def cover_image
+    if Rails.rcache.get("#{cover_image_cache_key}:expire").to_i >= Time.now.to_i
+      image_url = Rails.rcache.get("person:#{self.id}:externals:wikipedia:cover")
+      if image_url && image_url != ""
+        return image_url
+      end
     end
     if !wikipedia
-      Rails.rcache.set("person:#{self.id}:externals:wikipedia:cover", nil, 1.day)
+      cover_image_set_cache(nil)
       return nil
     end
-    image_url = wikipedia.image_url(size)
+    image_url = wikipedia.image_url
     if !image_url
-      Rails.rcache.set("person:#{self.id}:externals:wikipedia:cover", nil, 1.day)
+      cover_image_set_cache(nil)
       return nil
     end
-    Rails.rcache.set("person:#{self.id}:externals:wikipedia:cover", image_url, 1.month)
+    cover_image_set_cache(image_url)
     image_url
   end
 

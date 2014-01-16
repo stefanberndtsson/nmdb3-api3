@@ -6,6 +6,7 @@ end
 
 module Externals
   class Wikipedia
+    IMAGE_SIZE=640
     def initialize(movie, page_title, lang = "en")
       @movie = movie
       @page_title = page_title
@@ -57,19 +58,17 @@ module Externals
       @image ||= image
     end
 
-    def image_url(size = 640)
-      @image_url ||= {}
-      return @image_url[size] if @image_url[size]
+    def image_url
+      return @image_url if @image_url
       if !image
-        @image_url[size] = nil
+        @image_url = nil
         return nil
       end
 
-      options = size ? { iiurlwidth: size } : { }
-      image_pages = client.find_image("File:"+image, options)
+      image_pages = client.find_image("File:"+image, { iiurlwidth: IMAGE_SIZE })
       image_page_ids = image_pages.data["query"]["pages"].keys if image_pages
       if !image_pages || image_page_ids.size == 0
-        @image_url[size] ||= nil
+        @image_url = nil
         return nil
       end
       pgs = image_pages.data["query"]["pages"]
@@ -79,14 +78,14 @@ module Externals
           pgs[pg]["imageinfo"].first.keys.include?("url"))
       end
       if pg_select.blank?
-        @image_url[size] ||= nil
+        @image_url = nil
         return nil
       end
 
       image_page_id = pg_select.keys.first
       image_page = pg_select[image_page_id]["imageinfo"].first
       image_url = image_page["thumburl"] ? image_page["thumburl"] : image_page["url"]
-      @image_url[size] ||= image_url
+      @image_url = image_url
     end
   end
 end

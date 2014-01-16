@@ -152,7 +152,10 @@ class Movie < ActiveRecord::Base
                score: @score,
              })
     if extra?(:cover) && Rails.rcache.get(cover_image_cache_key)
-      json_hash[:image_url] = cover_image
+      json_hash[:image_url] = Rails.rcache.get(cover_image_cache_key)
+      if Rails.rcache.get("#{cover_image_cache_key}:expire").to_i < Time.now.to_i
+        json_hash[:image_url_expired] = true
+      end
     end
     if extra?(:episode_links) && is_episode
       json_hash[:prev_episode] = prev_episode.short_data if prev_episode
@@ -249,26 +252,34 @@ class Movie < ActiveRecord::Base
     @wikipedia[lang] ||= MovieExternal::Wikipedia.new(self, wpages[lang], lang)
   end
 
-  def cover_image_cache_key(size = 640)
+  def cover_image_cache_key
     movie_id = is_episode ? self.main.id : self.id
     "movie:#{movie_id}:externals:wikipedia:cover"
   end
 
-  def cover_image(size = 640)
-    image_url = Rails.rcache.get(cover_image_cache_key(size))
-    if image_url && image_url != ""
-      return image_url
+  def cover_image_set_cache(image_url, expire = 1.month)
+    expire = 1.day if !image_url
+    Rails.rcache.set(cover_image_cache_key, image_url)
+    Rails.rcache.set("#{cover_image_cache_key}:expire", (Time.now + expire).to_i)
+  end
+
+  def cover_image
+    if Rails.rcache.get("#{cover_image_cache_key}:expire").to_i >= Time.now.to_i
+      image_url = Rails.rcache.get(cover_image_cache_key)
+      if image_url && image_url != ""
+        return image_url
+      end
     end
     if !wikipedia
-      Rails.rcache.set(cover_image_cache_key(size), nil, 1.day)
+      cover_image_set_cache(nil)
       return nil
     end
-    image_url = wikipedia.image_url(size)
+    image_url = wikipedia.image_url
     if !image_url
-      Rails.rcache.set(cover_image_cache_key(size), nil, 1.day)
+      cover_image_set_cache(nil)
       return nil
     end
-    Rails.rcache.set(cover_image_cache_key(size), image_url, 1.month)
+    cover_image_set_cache(image_url)
     image_url
   end
 
