@@ -49,6 +49,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'additionals'
       get 'similar'
       get 'new_title'
+      get 'versions'
     end
     collection do
       get 'new_title'

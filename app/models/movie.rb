@@ -20,6 +20,7 @@ class Movie < ActiveRecord::Base
   has_many :release_dates
   has_many :movie_connections, -> { includes([:movie_connection_type, :linked_movie]) }
   has_many :movie_akas
+  has_many :alternate_versions, -> { where(parent_id: nil) }
   has_one :rating
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score

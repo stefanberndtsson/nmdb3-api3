@@ -203,4 +203,9 @@ class MoviesController < ApplicationController
 
     render json: params[:id] ? new_titled_movies.values.first : new_titled_movies
   end
+
+  def versions
+    @movie = Movie.find(params[:id])
+    render json: @movie.alternate_versions
+  end
 end
