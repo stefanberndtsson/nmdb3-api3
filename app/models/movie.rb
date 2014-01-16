@@ -210,14 +210,10 @@ class Movie < ActiveRecord::Base
     pages << :images if has_images?
     pages << :episodes if episodes.count > 0
     pages << :connections if movie_connections.count > 0
-    pages << :additionals if has_additionals?
+    pages << :additionals
+    pages << :versions if alternate_versions.count > 0
     pages << :similar if has_similar?
     pages
-  end
-
-  def has_additionals?
-    return true if movie_akas.count > 0
-    false
   end
 
   def has_images?
