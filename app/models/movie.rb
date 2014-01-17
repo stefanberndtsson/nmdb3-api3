@@ -22,6 +22,7 @@ class Movie < ActiveRecord::Base
   has_many :movie_akas
   has_many :alternate_versions, -> { where(parent_id: nil) }
   has_many :soundtrack_titles, -> { order(:sort_order) }
+  has_many :taglines, -> { order(:sort_order) }
   has_one :rating
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
@@ -178,8 +179,11 @@ class Movie < ActiveRecord::Base
         distribution: rating.distribution
       }
     end
-    if extra?(:first_release_date) && release_dates
+    if extra?(:first_release_date) && release_dates.count > 0
       json_hash[:first_release_date] = first_release_date
+    end
+    if extra?(:tagline) && taglines.count > 0
+      json_hash[:tagline] = taglines.first.tagline
     end
     json_hash.delete("title_category")
     json_hash.delete("episode_sort_value")
@@ -214,6 +218,7 @@ class Movie < ActiveRecord::Base
     pages << :additionals
     pages << :versions if alternate_versions.count > 0
     pages << :soundtrack if soundtrack_titles.count > 0
+    pages << :taglines if taglines.count > 0
     pages << :similar if has_similar?
     pages
   end

@@ -213,4 +213,9 @@ class MoviesController < ApplicationController
     @movie = Movie.find(params[:id])
     render json: @movie.soundtrack_titles
   end
+
+  def taglines
+    @movie = Movie.find(params[:id])
+    render json: @movie.taglines
+  end
 end
