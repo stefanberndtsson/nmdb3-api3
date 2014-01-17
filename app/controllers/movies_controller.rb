@@ -208,4 +208,9 @@ class MoviesController < ApplicationController
     @movie = Movie.find(params[:id])
     render json: @movie.alternate_versions
   end
+
+  def soundtrack
+    @movie = Movie.find(params[:id])
+    render json: @movie.soundtrack_titles
+  end
 end

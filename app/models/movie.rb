@@ -21,6 +21,7 @@ class Movie < ActiveRecord::Base
   has_many :movie_connections, -> { includes([:movie_connection_type, :linked_movie]) }
   has_many :movie_akas
   has_many :alternate_versions, -> { where(parent_id: nil) }
+  has_many :soundtrack_titles, -> { order(:sort_order) }
   has_one :rating
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score
@@ -212,6 +213,7 @@ class Movie < ActiveRecord::Base
     pages << :connections if movie_connections.count > 0
     pages << :additionals
     pages << :versions if alternate_versions.count > 0
+    pages << :soundtrack if soundtrack_titles.count > 0
     pages << :similar if has_similar?
     pages
   end
