@@ -218,4 +218,23 @@ class MoviesController < ApplicationController
     @movie = Movie.find(params[:id])
     render json: @movie.taglines
   end
+
+  def technicals
+    @movie = Movie.find(params[:id])
+    technicals = @movie.technicals
+    tech_grouped = technicals.group_by { |x| x.key }
+    tech_groups = tech_grouped.keys.sort_by { |x| Technical.sort_value(x) }.map do |group|
+      {
+        category: tech_grouped[group].first.category,
+        key: group,
+        values: tech_grouped[group].map do |item|
+          {
+            value: item.value,
+            info: item.info
+          }.compact
+        end
+      }.compact
+    end
+    render json: tech_groups
+  end
 end

@@ -52,6 +52,7 @@ Nmdb3Api3::Application.routes.draw do
       get 'versions'
       get 'soundtrack'
       get 'taglines'
+      get 'technicals'
     end
     collection do
       get 'new_title'
