@@ -16,6 +16,10 @@ class RedisStore
     redis.expire(STORE_PREFIX+key, new_expire)
   end
 
+  def persist(key)
+    redis.persist(STORE_PREFIX+key)
+  end
+
   def get(key)
     redis.get(STORE_PREFIX+key)
   end
