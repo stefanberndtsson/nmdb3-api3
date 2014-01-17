@@ -47,6 +47,8 @@ class Movie < ActiveRecord::Base
   end
 
   def display_full_title
+    # If episode, just reply with original name
+    return full_title if is_episode
     # First check our cache for entry
     cached_title = Rails.rcache.get("movie:#{self.id}:extra:display_full_title")
     if cached_title
@@ -74,6 +76,8 @@ class Movie < ActiveRecord::Base
   end
 
   def display_title
+    # If episode, just reply with original name
+    return title if is_episode
     # First check our cache for entry
     cached_title = Rails.rcache.get("movie:#{self.id}:extra:display_title")
     if cached_title
