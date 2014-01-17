@@ -19,6 +19,30 @@ class Keyword < ActiveRecord::Base
     strong.uniq
   end
 
+  def self.keywords_preview(movie, limit = 10)
+    keywords = movie.keywords
+    strong = []
+    movie.plots.each do |plot|
+      next if !plot || !plot.plot_norm
+      tmpplot = plot.plot_norm.downcase.gsub("-", " ").gsub(/[^ a-z0-9]/, "")
+      keywords.each do |keyword|
+        tmpkeyword = keyword.keyword.downcase.gsub("-", " ").gsub(/[^ a-z0-9]/, "").norm
+        if tmpplot.index(tmpkeyword)
+          keyword.strong = true
+          strong << keyword
+        end
+      end
+    end
+    normal = (keywords - strong)
+    strong = strong.uniq.sort_by { |keyword| [keyword.keyword.gsub(/-/,"")[2..2]] }
+    normal = normal.sort_by { |keyword| [keyword.keyword.gsub(/-/,"")[2..2]] }
+    output = strong[0...limit]
+    if output.size < limit
+      output += normal[0...limit-output.size]
+    end
+    output.sort_by { |keyword| [keyword.strong ? "0" : "1", keyword.display] }
+  end
+
   def display
     kw = keyword
     keepdash.each do |kd|

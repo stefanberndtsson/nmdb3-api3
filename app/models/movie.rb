@@ -144,6 +144,10 @@ class Movie < ActiveRecord::Base
     Keyword.strong_keywords(self)
   end
 
+  def keywords_preview(limit = 10)
+    Keyword.keywords_preview(self, limit)
+  end
+
   def as_json(options = {})
     json_hash = super(options)
       .merge({
@@ -184,6 +188,9 @@ class Movie < ActiveRecord::Base
     end
     if extra?(:tagline) && taglines.count > 0
       json_hash[:tagline] = taglines.first.tagline
+    end
+    if extra?(:keywords) && keywords.count > 0
+      json_hash[:keywords] = keywords_preview
     end
     json_hash.delete("title_category")
     json_hash.delete("episode_sort_value")
