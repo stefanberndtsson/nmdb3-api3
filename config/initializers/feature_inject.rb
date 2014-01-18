@@ -39,7 +39,7 @@ end
 class Hash
   def compact(opts={})
     inject({}) do |new_hash, (k,v)|
-      if !v.nil?
+      if !v.blank?
         new_hash[k] = opts[:recurse] && v.class == Hash ? v.compact(opts) : v
       end
       new_hash

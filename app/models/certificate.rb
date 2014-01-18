@@ -1,9 +1,10 @@
-class ColorInfo < ActiveRecord::Base
+class Certificate < ActiveRecord::Base
   belongs_to :movie
 
   def as_json(options = { })
     {
-      color: color,
+      certificate: certificate,
+      country: country,
       info: info
     }.compact
   end
