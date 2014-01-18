@@ -38,6 +38,7 @@ class MovieExternal
     def movie_connection_data
       return nil if @obj.movie_connections.count == 0
       page = movie_connection_page
+      return nil if !page
       doc = Nokogiri::HTML(page)
       content = doc.search("#connections_content .list")
       groups = content.search("a[@name]")
@@ -76,6 +77,7 @@ class MovieExternal
     def movie_connection_page
       cached_page = Rails.rcache.get("#{cache_prefix}:movie_connections:page")
       return cached_page if cached_page
+      return nil if !movie_connection_url
       open(movie_connection_url) do |u|
         page_data = u.read
         Rails.rcache.set("#{cache_prefix}:movie_connections:page", page_data, 1.week)
@@ -84,6 +86,7 @@ class MovieExternal
     end
 
     def movie_connection_url
+      return nil if !imdbid
       IMDB_BASE+imdbid+MC_PAGE
     end
   end

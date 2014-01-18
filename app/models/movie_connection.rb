@@ -31,6 +31,7 @@ class MovieConnection < ActiveRecord::Base
     return mcs if mcs.count == (texts || {}).keys.count
 
     imdb_data = movie.imdb.movie_connection_data
+    return mcs if !imdb_data
     skip_ids = []
     mcs.each do |mc|
       next if mc.text
