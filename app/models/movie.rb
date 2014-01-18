@@ -24,6 +24,7 @@ class Movie < ActiveRecord::Base
   has_many :soundtrack_titles, -> { order(:sort_order) }
   has_many :taglines, -> { order(:sort_order) }
   has_many :technicals
+  has_many :color_infos
   has_one :rating
   belongs_to :main, :foreign_key => :parent_id, :class_name => "Movie"
   attr_accessor :score

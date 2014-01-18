@@ -162,6 +162,7 @@ class MoviesController < ApplicationController
       producers: @movie.crew_by_role("producer"),
       directors: @movie.crew_by_role("director"),
       writers: @movie.crew_by_role("writer"),
+      color_infos: @movie.color_infos
     }
   end
 
