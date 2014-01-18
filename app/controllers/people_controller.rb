@@ -88,6 +88,82 @@ class PeopleController < ApplicationController
     }.compact
   end
 
+  def by_genre
+    @person = Person.find(params[:id])
+    movies = @person.as_cast.includes(movie: :genres)
+    genres = []
+    grouped = { }
+    movies.each do |occ|
+      occ.movie.genres.each do |genre|
+        genres << genre
+        grouped[genre.id] ||= []
+        grouped[genre.id] << {
+          movie: occ.movie,
+          character: occ.character,
+          extras: occ.extras
+        }.compact
+      end
+    end
+    genre_by_ids = genres.uniq.group_by(&:id)
+    genres = []
+    grouped.keys.each do |genre_id|
+      genres << {
+        id: genre_id,
+        genre: genre_by_ids[genre_id].first.genre,
+        count: grouped[genre_id].size
+      }
+    end
+    genres = genres.sort_by { |x| -x[:count] }
+    grouped_by_genre = genres.map do |genre|
+      {
+        id: genre[:id],
+        genre: genre[:genre],
+        count: genre[:count],
+        movies: grouped[genre[:id]].sort_by { |x| -(x[:movie].movie_sort_value.to_i) }
+      }
+    end
+    render json: grouped_by_genre
+  end
+
+  def by_keyword
+    @person = Person.find(params[:id])
+    movies = @person.as_cast.includes(movie: :keywords)
+    keywords = []
+    grouped = { }
+    movies.each do |occ|
+      occ.movie.keywords.each do |keyword|
+        keywords << keyword
+        grouped[keyword.id] ||= []
+        grouped[keyword.id] << {
+          movie: occ.movie,
+          character: occ.character,
+          extras: occ.extras
+        }.compact
+      end
+    end
+    keyword_by_ids = keywords.uniq.group_by(&:id)
+    keywords = []
+    grouped.keys.each do |keyword_id|
+      keywords << {
+        id: keyword_id,
+        keyword: keyword_by_ids[keyword_id].first.keyword,
+        display: keyword_by_ids[keyword_id].first.display,
+        count: grouped[keyword_id].size
+      }
+    end
+    keywords = keywords.sort_by { |x| -x[:count] }
+    grouped_by_keyword = keywords.map do |keyword|
+      {
+        id: keyword[:id],
+        keyword: keyword[:keyword],
+        display: keyword[:display],
+        count: keyword[:count],
+        movies: grouped[keyword[:id]].sort_by { |x| -(x[:movie].movie_sort_value.to_i) }
+      }
+    end
+    render json: grouped_by_keyword
+  end
+
   private
   def get_metadata(key_group, keys = nil)
     keys = PersonMetadatum.pages[key_group][:keys] if !keys

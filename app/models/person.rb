@@ -101,7 +101,7 @@ class Person < ActiveRecord::Base
   end
 
   def active_pages
-    pages = [:as_role]
+    pages = [:as_role, :by_genre, :by_keyword]
     pages << :top_movies if as_cast.count > 0
     pages << :images if has_images?
     pages += person_metadata.pluck(:key).uniq.map { |x| PersonMetadatum.page_from_key(x) }.uniq

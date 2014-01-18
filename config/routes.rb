@@ -27,6 +27,8 @@ Nmdb3Api3::Application.routes.draw do
       get 'cover'
       get 'top_movies'
       get 'images'
+      get 'by_genre'
+      get 'by_keyword'
     end
   end
 
