@@ -247,11 +247,12 @@ class Person < ActiveRecord::Base
 
   def imdb_search_text
     search_name = [first_name, last_name].join(" ")
-#    if name_count
-#      search_name += " (#{name_count})"
-#    end
+    if name_count
+      search_name += " (#{name_count})"
+    end
 #    "+intitle:\"#{search_name}\""
-    "\"#{search_name}\""
+#    "\"#{search_name}\""
+    search_name
   end
 
   def top_movies

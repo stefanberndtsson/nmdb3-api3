@@ -33,6 +33,118 @@ class MovieExternal
 
     def setup
       @objclass = "movie"
+      @is_short = (!@obj.genres.blank? && @obj.genres.map(&:genre).include?("Short"))
+      @ttype = ""
+      if @obj.is_episode
+        @ttype = "ep"
+      elsif @obj.title_category == "VG"
+        @ttype = "vg"
+      elsif @obj.title_category == "TV" || @obj.title_category == "TVS"
+        @ttype = "tv"
+      elsif !@is_short
+        @ttype = "ft"
+      end
+    end
+
+    def fetch_id
+      @obj.imdb_id
+    end
+
+    def store_id(new_id)
+      @obj.update_attribute(:imdb_id, new_id)
+    end
+
+    def search
+      query = URI.encode_www_form_component("#{@obj.imdb_search_text}")
+      urlparams = "ttype=#{@ttype}&s=tt&ref_=fn_tt_ex&q=#{query}"
+      imdbdata = nil
+      open(BASEURL+urlparams) do |u|
+        imdbdata = u.read
+      end
+      return nil if !imdbdata
+      doc = Nokogiri::HTML(imdbdata)
+      result_list = doc.search(".findList .findResult")
+
+      if result_list == 1
+        tmp_imdbid = result_list.map do |item|
+          item.search(".result_text a").attr('href').value[/^\/title\/(tt[^\/]+)/,1]
+        end.first
+        store_id(tmp_imdbid)
+        return tmp_imdbid
+      end
+      return nil if result_list.blank?
+
+      result_list = result_list.select { |x| is_matching?(x) }
+      if result_list.size == 1
+        tmp_imdbid = result_list.map do |item|
+          item.search(".result_text a").attr('href').value[/^\/title\/(tt[^\/]+)/,1]
+        end.first
+        store_id(tmp_imdbid)
+        return tmp_imdbid
+      end
+      return nil if result_list.blank?
+
+      result_list = result_list.select { |x| is_matching_with_parent?(x) }
+      if result_list.size == 1
+        tmp_imdbid = result_list.map do |item|
+          item.search(".result_text a").attr('href').value[/^\/title\/(tt[^\/]+)/,1]
+        end.first
+        store_id(tmp_imdbid)
+        return tmp_imdbid
+      end
+      nil
+    end
+
+    def is_matching_with_parent?(imdb_entry)
+      return false if !@obj.is_episode
+      return false if !@obj.parent_id
+
+      entry = imdb_entry.search(".result_text small").first.text.trim
+      entry == "- #{@obj.main.imdb.imdb_like_title}"
+    end
+
+    def is_matching?(imdb_entry)
+      entry = imdb_entry.search(".result_text").first
+      if @obj.is_episode
+        new_doc = Nokogiri::HTML(entry.to_html.split(/<br>/).first+"</td>")
+        entry = new_doc.text.trim
+      else
+        entry = entry.text.trim
+      end
+      entry == imdb_like_title
+    end
+
+    def imdb_like_title
+      title = nil
+      year = nil
+      if @obj.is_episode
+        if @obj.episode_name
+          title = @obj.episode_name
+        else
+          title = "#(#{@obj.episode_season}.#{@obj.episode_episode})"
+        end
+        year = "(#{@obj.full_year})" if !@obj.full_year.blank?
+      else
+        title = @obj.title
+        title.gsub!(/^\"(.*)\"$/,'\1') if @obj.is_tvseries?
+        year = "(#{@obj.title_year_uncounted})"
+      end
+        year_count = @obj.title_year_count ? "(#{@obj.title_year_count})" : nil
+      title_type = nil
+      if @obj.is_episode
+        title_type = "(TV Episode)"
+      elsif @obj.is_tvseries?
+        title_type = "(TV Series)"
+      elsif @is_short && @ttype == "tv"
+        title_type = "(TV Short)"
+      elsif @ttype == "tv"
+        title_type = "(TV Movie)"
+      elsif @is_short
+        title_type = "(Short)"
+      elsif @ttype == "vg"
+        title_type = "(Video Game)"
+      end
+      [title, year_count, year, title_type].compact.join(" ")
     end
 
     def movie_connection_data

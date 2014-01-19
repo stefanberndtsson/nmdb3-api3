@@ -104,6 +104,16 @@ class Movie < ActiveRecord::Base
     title
   end
 
+  def title_year_uncounted
+    return title_year if !title_year.index("/")
+    title_year.split(/\//).first
+  end
+
+  def title_year_count
+    return nil if !title_year.index("/")
+    title_year.split(/\//).last
+  end
+
   def is_tvseries?
     title_category == "TVS"
   end
@@ -304,6 +314,22 @@ class Movie < ActiveRecord::Base
   end
 
   def imdb_search_text
+    if is_episode
+      year = full_year.blank? ? "" : " (#{full_year})"
+      if episode_name
+        return episode_name + year
+      else
+        return "#(#{episode_season}.#{episode_episode})" + year
+      end
+    end
+    search_text = title
+    if title_category == "TVS"
+      search_text.gsub!(/^\"(.*)\"$/, '\1')
+    end
+    search_text+" (#{title_year_uncounted})"
+  end
+
+  def old_imdb_search_text
     if title_category == "TVS"
       if episode_name
         return "\"#{title} \"#{episode_name}\"\""

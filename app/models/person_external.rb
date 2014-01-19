@@ -11,6 +11,36 @@ module PersonExternal
     def setup
       @objclass = "person"
     end
+
+    def fetch_id
+      tmp = Rails.rcache.get("#{cache_prefix}:id")
+      tmp.blank? ? nil : tmp
+    end
+
+    def store_id(new_id)
+      return if !new_id
+      Rails.rcache.set("#{cache_prefix}:id", new_id)
+    end
+
+    def search
+      query = URI.encode_www_form_component("#{@obj.imdb_search_text}")
+      urlparams = "s=nm&ref_=fn_nm_ex&q=#{query}"
+      imdbdata = nil
+      open(BASEURL+urlparams) do |u|
+        imdbdata = u.read
+      end
+      return nil if !imdbdata
+      doc = Nokogiri::HTML(imdbdata)
+      result_list = doc.search(".findList .findResult").map do |item|
+        item.search(".result_text a").attr('href').value[/^\/name\/(nm[^\/]+)/,1]
+      end
+
+      if result_list.size == 1
+        store_id(result_list.first)
+        return result_list.first
+      end
+      nil
+    end
   end
 
   class Bing < Externals::Bing

@@ -1,5 +1,8 @@
 module Externals
   class IMDb
+    BASEURL="http://www.imdb.com/find?exact=true&"
+    require 'open-uri'
+
     def initialize(obj)
       @obj = obj
       @objclass = "movie_or_person"
@@ -7,7 +10,9 @@ module Externals
     end
 
     def imdbid
-      @obj.bing.imdbid
+      tmp_imdbid = fetch_id
+      return tmp_imdbid if tmp_imdbid
+      search
     end
 
     def cache_prefix
