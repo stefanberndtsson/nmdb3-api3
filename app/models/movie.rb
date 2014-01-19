@@ -312,15 +312,18 @@ class Movie < ActiveRecord::Base
       end
     end
     if title_category == "VG"
-      return "+intitle:\"#{full_title}\""
+#      return "+intitle:\"#{full_title}\""
+      return "\"#{full_title}\""
     end
     if title_category
       cpos = full_title.rindex("(#{title_category})")
       if cpos
-        return "+intitle:\"#{full_title[0..cpos-2]}\""
+#        return "+intitle:\"#{full_title[0..cpos-2]}\""
+        return "\"#{full_title[0..cpos-2]}\""
       end
     end
-    return "+intitle:\"#{full_title}\""
+#    return "+intitle:\"#{full_title}\""
+    return "\"#{full_title}\""
   end
 
   # Episode

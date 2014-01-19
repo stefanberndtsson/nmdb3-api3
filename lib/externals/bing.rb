@@ -12,7 +12,7 @@ module Externals
       query_string = @obj.imdb_search_text
       query = URI.encode_www_form_component("#{query_string} #{@extra_query} site:www.imdb.com/#{@section}")
       headers = { }
-      if !cookies && Rails.rcache.get("#{cache_prefix}:bing:cookies")
+      if false && !cookies && Rails.rcache.get("#{cache_prefix}:bing:cookies")
         cookies = Rails.rcache.get("#{cache_prefix}:bing:cookies")
       end
       headers["Cookie"] = cookies if cookies
