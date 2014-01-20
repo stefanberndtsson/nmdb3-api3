@@ -184,6 +184,10 @@ class Person < ActiveRecord::Base
         json_hash[:image_url_expired] = true
       end
     end
+    cached_imdbid = imdb.imdbid(true)
+    if cached_imdbid
+      json_hash[:imdb_id] = cached_imdbid
+    end
     json_hash
   end
 

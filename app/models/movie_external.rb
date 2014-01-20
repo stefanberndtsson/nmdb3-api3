@@ -41,7 +41,7 @@ class MovieExternal
         @ttype = "vg"
       elsif @obj.title_category == "TV" || @obj.title_category == "TVS"
         @ttype = "tv"
-      elsif !@is_short
+      elsif !@is_short && !@obj.title_category == "V"
         @ttype = "ft"
       end
     end
@@ -141,6 +141,8 @@ class MovieExternal
         title_type = "(TV Movie)"
       elsif @is_short
         title_type = "(Short)"
+      elsif @obj.title_category == "V"
+        title_type = "(Video)"
       elsif @ttype == "vg"
         title_type = "(Video Game)"
       end

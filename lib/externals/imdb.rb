@@ -9,9 +9,10 @@ module Externals
       setup
     end
 
-    def imdbid
+    def imdbid(cache_only = false)
       tmp_imdbid = fetch_id
       return tmp_imdbid if tmp_imdbid
+      return nil if cache_only
       search
     end
 
