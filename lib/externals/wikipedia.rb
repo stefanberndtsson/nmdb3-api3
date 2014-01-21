@@ -30,7 +30,7 @@ module Externals
     end
 
     def infobox
-      @infobox ||= content.scan(/(?=\{\{Infobox((?:[^{}]++|\{\{\g<1>\}\})++)\}\})/).map do |box|
+      @infobox ||= content.scan(/(?=\{\{[Ii]nfobox((?:[^{}]++|\{\{\g<1>\}\})++)\}\})/).map do |box|
         box.map do |line|
           box_type = line.split(/[\n\|]+/).first.trim.downcase
           values = line.split(/\n*\s*\|\s*/).map do |item|
