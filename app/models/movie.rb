@@ -489,6 +489,7 @@ class Movie < ActiveRecord::Base
 
   def clear_all_caches
     Rails.rcache.keys("movie:#{self.id}:*").each do |key|
+      next if Rails.rcache.ttl(key) == -1
       Rails.rcache.del(key)
     end
   end

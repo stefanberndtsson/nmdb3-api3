@@ -12,6 +12,10 @@ class RedisStore
     end
   end
 
+  def ttl(key)
+    redis.ttl(STORE_PREFIX+key)
+  end
+
   def expire(key, new_expire)
     redis.expire(STORE_PREFIX+key, new_expire)
   end

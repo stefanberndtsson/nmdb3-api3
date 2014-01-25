@@ -277,6 +277,7 @@ class Person < ActiveRecord::Base
 
   def clear_all_caches
     Rails.rcache.keys("person:#{self.id}:*").each do |key|
+      next if Rails.rcache.ttl(key) == -1
       Rails.rcache.del(key)
     end
   end
