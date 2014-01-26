@@ -214,7 +214,7 @@ class Solr
     votes = "votes/5"
     award = "300000*(category_award_value*20*award_keyword+reduce_genre*2000)"
 
-    "((#{episode})+(#{scores})+(#{votes})-(#{award}))/100"
+    "((#{episode})+(#{scores})+(#{votes})-10*(#{award}))/100"
   end
 
   def solr
