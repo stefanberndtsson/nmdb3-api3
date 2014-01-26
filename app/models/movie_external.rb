@@ -65,7 +65,7 @@ class MovieExternal
       doc = Nokogiri::HTML(imdbdata)
       result_list = doc.search(".findList .findResult")
 
-      if result_list == 1
+      if result_list.size == 1
         tmp_imdbid = result_list.map do |item|
           item.search(".result_text a").attr('href').value[/^\/title\/(tt[^\/]+)/,1]
         end.first
