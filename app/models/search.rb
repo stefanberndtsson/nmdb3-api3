@@ -19,13 +19,13 @@ class Search < ActiveRecord::Base
   end
 
   def self.solr_query_movies(query, options = {})
-    query = query.norm
+    query = query.norm_case
     movies = Solr.new("movie")
     movies.query(query, options)
   end
 
   def self.solr_query_people(query, options = {})
-    query = query.norm
+    query = query.norm_case
     people = Solr.new("person")
     people.query(query, options)
   end

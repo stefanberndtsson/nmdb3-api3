@@ -23,6 +23,10 @@ class String
     Unicode.downcase(decomposed)
   end
 
+  def norm_case
+    Unicode.nfkd(self).gsub(/[^\u0000-\u00ff]/, "")
+  end
+
   def ltrim
     self.gsub(/^\s+/,'')
   end
