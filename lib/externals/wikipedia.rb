@@ -26,7 +26,7 @@ module Externals
     end
 
     def content
-      page.content.gsub(/<!-- .*? -->/m, '')
+      page.content.gsub(/<!--.*?-->/m, '')
     end
 
     def infobox
