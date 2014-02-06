@@ -55,23 +55,24 @@ class Movie < ActiveRecord::Base
     # First check our cache for entry
     cached_title = Rails.rcache.get("movie:#{self.id}:extra:display_full_title")
     if cached_title
-      @display_title_fresh = true
+      @display_title_fresh = Rails.rcache.get("movie:#{self.id}:extra:display_full_title:expire").to_i > Time.now.to_i
+      display_title_set_cache("full_title", cached_title) if extra?(:display_title)
       return cached_title
     end
     # Special handling of original title for scandinavian titles
     if extra?(:display_title) && is_swedish?
-      @display_title_fresh = true
-      Rails.rcache.set("movie:#{self.id}:extra:display_full_title", full_title, 1.week)
+      @display_title_fresh = Rails.rcache.get("movie:#{self.id}:extra:display_full_title:expire").to_i > Time.now.to_i
+      display_title_set_cache("full_title", full_title)
       return full_title
     end
     # Check if we have a stored name from freebase, use if so...
     if extra?(:display_title) && freebase.topic_name(true)
-      @display_title_fresh = true
+      @display_title_fresh = Rails.rcache.get("movie:#{self.id}:extra:display_full_title:expire").to_i > Time.now.to_i
       new_title = (is_tvseries? ? "\"#{freebase.topic_name}\"" : freebase.topic_name) + " (#{title_year})"
       if title_category && title_category != "TVS"
         new_title += " (#{title_category})"
       end
-      Rails.rcache.set("movie:#{self.id}:extra:display_full_title", new_title, 1.week)
+      display_title_set_cache("full_title", new_title)
       return new_title
     end
     # Return plain title if we have none of the above
@@ -84,20 +85,21 @@ class Movie < ActiveRecord::Base
     # First check our cache for entry
     cached_title = Rails.rcache.get("movie:#{self.id}:extra:display_title")
     if cached_title
-      @display_title_fresh = true
+      @display_title_fresh = Rails.rcache.get("movie:#{self.id}:extra:display_title:expire").to_i > Time.now.to_i
+      display_title_set_cache("title", cached_title) if extra?(:display_title)
       return cached_title
     end
     # Special handling of original title for scandinavian titles if we're fetching display_title
     if extra?(:display_title) && is_swedish?
-      Rails.rcache.set("movie:#{self.id}:extra:display_title", title, 1.week)
-      @display_title_fresh = true
+      @display_title_fresh = Rails.rcache.get("movie:#{self.id}:extra:display_title:expire").to_i > Time.now.to_i
+      display_title_set_cache("title", title)
       return title
     end
     # Check if we have a stored name from freebase, use if so...
     if extra?(:display_title) && freebase.topic_name(true)
       new_title = (is_tvseries? ? "\"#{freebase.topic_name}\"" : freebase.topic_name)
-      @display_title_fresh = true
-      Rails.rcache.set("movie:#{self.id}:extra:display_title", new_title, 1.week)
+      @display_title_fresh = Rails.rcache.get("movie:#{self.id}:extra:display_title:expire").to_i > Time.now.to_i
+      display_title_set_cache("title", new_title)
       return new_title
     end
     # Return plain title if we have none of the above
@@ -280,6 +282,12 @@ class Movie < ActiveRecord::Base
     return nil if !wpages || !wpages[lang]
     @wikipedia ||= {}
     @wikipedia[lang] ||= MovieExternal::Wikipedia.new(self, wpages[lang], lang)
+  end
+
+  def display_title_set_cache(type, title, expire = 1.month)
+    expire = 1.day if !title
+    Rails.rcache.set("movie:#{self.id}:extra:display_#{type}", title)
+    Rails.rcache.set("movie:#{self.id}:extra:display_#{type}:expire", (Time.now + expire).to_i)
   end
 
   def cover_image_cache_key
